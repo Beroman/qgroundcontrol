@@ -62,6 +62,71 @@ ColumnLayout {
         }
     }
 
+    Item {
+        id:                 _colorItem
+        Layout.fillWidth:   true
+        height:             140
+
+        DeadMouseArea { anchors.fill: parent }
+
+        Rectangle {
+            anchors.fill:   parent
+            color:          qgcPal.window
+        }
+
+        Column {
+            spacing: ScreenTools.defaultFontPixelWidth
+            anchors.centerIn: parent
+            QGCSlider {
+                id:             redSlider
+                width:          200
+                stepSize:       1
+                minimumValue:   0
+                maximumValue:   255
+                height: 20
+                value: 255
+                displayValue: true
+                onValueChanged: {
+                    activeVehicle.setColor(redSlider.value, greenSlider.value, blueSlider.value)
+                }
+            }
+            QGCSlider {
+                id:             greenSlider
+                width:          200
+                stepSize:       1
+                minimumValue:   0
+                maximumValue:   255
+                height: 20
+                value: 255
+                displayValue: true
+                onValueChanged: {
+                    activeVehicle.setColor(redSlider.value, greenSlider.value, blueSlider.value)
+                }
+            }
+            QGCSlider {
+                id:             blueSlider
+                width:          200
+                stepSize:       1
+                minimumValue:   0
+                maximumValue:   255
+                height: 20
+                value: 255
+                displayValue: true
+                onValueChanged: {
+                    activeVehicle.setColor(redSlider.value, greenSlider.value, blueSlider.value)
+                }
+            }
+            Rectangle {
+                id: rect
+                color: Qt.rgba(redSlider.value/255, greenSlider.value/255, blueSlider.value/255, 1)
+                width: 30
+                height: 30
+                border.width: 1
+                border.color: "white"
+            }
+        }
+    }
+
     TerrainProgress {
         Layout.fillWidth: true
     }

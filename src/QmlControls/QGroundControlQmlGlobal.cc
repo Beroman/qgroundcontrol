@@ -219,9 +219,9 @@ bool QGroundControlQmlGlobal::linesIntersect(QPointF line1A, QPointF line1B, QPo
     QPointF intersectPoint;
 
 #if QT_VERSION < QT_VERSION_CHECK(5, 15, 0)
-    auto intersect = QLineF(line1A, line1B).intersect(QLineF(line2A, line2B), &intersectPoint);
-#else
     auto intersect = QLineF(line1A, line1B).intersects(QLineF(line2A, line2B), &intersectPoint);
+#else
+    auto intersect = QLineF(line1A, line1B).intersect(QLineF(line2A, line2B), &intersectPoint);
 #endif
 
     return  intersect == QLineF::BoundedIntersection &&

@@ -4621,3 +4621,68 @@ VehicleEstimatorStatusFactGroup::VehicleEstimatorStatusFactGroup(QObject* parent
     _addFact(&_horizPosAccuracyFact,            _horizPosAccuracyFactName);
     _addFact(&_vertPosAccuracyFact,             _vertPosAccuracyFactName);
 }
+void Vehicle::setColor(qreal r, qreal g, qreal b)
+{
+    auto toPVM = [](int value) -> int {
+        const int COLOR_MAX = 255;
+        const int COLOR_MIN = 0;
+
+        const int PVM_MIN = 0;
+        const int PVM_MAX = 32000;
+//        const int PVM_MIN = 0;
+//        const int PVM_MAX = 100;
+
+        int converted = PVM_MAX + (value - COLOR_MAX) * (PVM_MAX - PVM_MIN) / (COLOR_MAX - COLOR_MIN);
+        return converted;
+    };
+//    static bool isInit = true;
+    qDebug() << "\n set Color" << r << g << b
+             << toPVM(r) << toPVM(g) << toPVM(b);
+    sendMavCommand(defaultComponentId(),
+                   MAV_CMD_DO_SET_SERVO,
+                   true,        // show error
+                   5,    // servo
+                   toPVM(r)); // PVM
+//    if (isInit){
+    sendMavCommand(defaultComponentId(),
+                   MAV_CMD_DO_SET_SERVO,
+                   true,        // show error
+                   6,    // servo
+                   toPVM(g)); // PVM
+    sendMavCommand(defaultComponentId(),
+                   MAV_CMD_DO_SET_SERVO,
+                   true,        // show error
+                   7,    // servo
+                   toPVM(b)); // PVM
+
+//    sendMavCommand(_defaultComponentId,
+//                   MAV_CMD_DO_MOTOR_TEST,
+//                   true,
+//                   5,
+//                   MOTOR_TEST_THROTTLE_PERCENT,
+//                   toPVM(r),
+//                   0,
+//                   0,
+//                   MOTOR_TEST_ORDER_BOARD);
+//    sendMavCommand(_defaultComponentId,
+//                   MAV_CMD_DO_MOTOR_TEST,
+//                   true,
+//                   6,
+//                   MOTOR_TEST_THROTTLE_PERCENT,
+//                   toPVM(g),
+//                   0,
+//                   0,
+//                   MOTOR_TEST_ORDER_BOARD);
+//    sendMavCommand(_defaultComponentId,
+//                   MAV_CMD_DO_MOTOR_TEST,
+//                   true,
+//                   7,
+//                   MOTOR_TEST_THROTTLE_PERCENT,
+//                   toPVM(b),
+//                   0,
+//                   0,
+//                   MOTOR_TEST_ORDER_BOARD);
+
+//    isInit = false;
+//    }
+}
