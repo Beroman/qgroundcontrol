@@ -31,6 +31,8 @@ QGCROOT  = $$PWD
 
 QML_IMPORT_PATH += $$PWD/src/QmlControls
 
+QMAKE_CXXFLAGS += -Wno-deprecated
+
 #
 # OS Specific settings
 #

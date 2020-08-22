@@ -447,7 +447,7 @@ void APMSensorsComponentController::_handleUASTextMessage(int uasId, int compId,
 
 #if 0
 
-    if (text.contains(QLatin1Literal("progress <"))) {
+    if (text.contains(QLatin1String("progress <"))) {
         QString percent = text.split("<").last().split(">").first();
         bool ok;
         int p = percent.toInt(&ok);
@@ -489,7 +489,7 @@ void APMSensorsComponentController::_handleUASTextMessage(int uasId, int compId,
         
         _startVisualCalibration();
         
-        if (text == QLatin1Literal("accel") || text == QLatin1Literal("mag") || text == QLatin1Literal("gyro")) {
+        if (text == QLatin1String("accel") || text == QLatin1String("mag") || text == QLatin1String("gyro")) {
             // Reset all progress indication
             _orientationCalDownSideDone = false;
             _orientationCalUpsideDownSideDone = false;
@@ -541,36 +541,36 @@ void APMSensorsComponentController::_handleUASTextMessage(int uasId, int compId,
         return;
     }
     
-    if (text.endsWith(QLatin1Literal("orientation detected"))) {
+    if (text.endsWith(QLatin1String("orientation detected"))) {
         QString side = text.section(" ", 0, 0);
         qDebug() << "Side started" << side;
         
-        if (side == QLatin1Literal("down")) {
+        if (side == QLatin1String("down")) {
             _orientationCalDownSideInProgress = true;
             if (_calTypeInProgress == CalTypeOffboardCompass) {
                 _orientationCalDownSideRotate = true;
             }
-        } else if (side == QLatin1Literal("up")) {
+        } else if (side == QLatin1String("up")) {
             _orientationCalUpsideDownSideInProgress = true;
             if (_calTypeInProgress == CalTypeOffboardCompass) {
                 _orientationCalUpsideDownSideRotate = true;
             }
-        } else if (side == QLatin1Literal("left")) {
+        } else if (side == QLatin1String("left")) {
             _orientationCalLeftSideInProgress = true;
             if (_calTypeInProgress == CalTypeOffboardCompass) {
                 _orientationCalLeftSideRotate = true;
             }
-        } else if (side == QLatin1Literal("right")) {
+        } else if (side == QLatin1String("right")) {
             _orientationCalRightSideInProgress = true;
             if (_calTypeInProgress == CalTypeOffboardCompass) {
                 _orientationCalRightSideRotate = true;
             }
-        } else if (side == QLatin1Literal("front")) {
+        } else if (side == QLatin1String("front")) {
             _orientationCalNoseDownSideInProgress = true;
             if (_calTypeInProgress == CalTypeOffboardCompass) {
                 _orientationCalNoseDownSideRotate = true;
             }
-        } else if (side == QLatin1Literal("back")) {
+        } else if (side == QLatin1String("back")) {
             _orientationCalTailDownSideInProgress = true;
             if (_calTypeInProgress == CalTypeOffboardCompass) {
                 _orientationCalTailDownSideRotate = true;
@@ -588,31 +588,31 @@ void APMSensorsComponentController::_handleUASTextMessage(int uasId, int compId,
         return;
     }
     
-    if (text.endsWith(QLatin1Literal("side done, rotate to a different side"))) {
+    if (text.endsWith(QLatin1String("side done, rotate to a different side"))) {
         QString side = text.section(" ", 0, 0);
         qDebug() << "Side finished" << side;
         
-        if (side == QLatin1Literal("down")) {
+        if (side == QLatin1String("down")) {
             _orientationCalDownSideInProgress = false;
             _orientationCalDownSideDone = true;
             _orientationCalDownSideRotate = false;
-        } else if (side == QLatin1Literal("up")) {
+        } else if (side == QLatin1String("up")) {
             _orientationCalUpsideDownSideInProgress = false;
             _orientationCalUpsideDownSideDone = true;
             _orientationCalUpsideDownSideRotate = false;
-        } else if (side == QLatin1Literal("left")) {
+        } else if (side == QLatin1String("left")) {
             _orientationCalLeftSideInProgress = false;
             _orientationCalLeftSideDone = true;
             _orientationCalLeftSideRotate = false;
-        } else if (side == QLatin1Literal("right")) {
+        } else if (side == QLatin1String("right")) {
             _orientationCalRightSideInProgress = false;
             _orientationCalRightSideDone = true;
             _orientationCalRightSideRotate = false;
-        } else if (side == QLatin1Literal("front")) {
+        } else if (side == QLatin1String("front")) {
             _orientationCalNoseDownSideInProgress = false;
             _orientationCalNoseDownSideDone = true;
             _orientationCalNoseDownSideRotate = false;
-        } else if (side == QLatin1Literal("back")) {
+        } else if (side == QLatin1String("back")) {
             _orientationCalTailDownSideInProgress = false;
             _orientationCalTailDownSideDone = true;
             _orientationCalTailDownSideRotate = false;
@@ -626,17 +626,17 @@ void APMSensorsComponentController::_handleUASTextMessage(int uasId, int compId,
         return;
     }
     
-    if (text.startsWith(QLatin1Literal("calibration done:"))) {
+    if (text.startsWith(QLatin1String("calibration done:"))) {
         _stopCalibration(StopCalibrationSuccess);
         return;
     }
 
-    if (text.startsWith(QLatin1Literal("calibration cancelled"))) {
+    if (text.startsWith(QLatin1String("calibration cancelled"))) {
         _stopCalibration(_waitingForCancel ? StopCalibrationCancelled : StopCalibrationFailed);
         return;
     }
 
-    if (text.startsWith(QLatin1Literal("calibration failed"))) {
+    if (text.startsWith(QLatin1String("calibration failed"))) {
         _stopCalibration(StopCalibrationFailed);
         return;
     }

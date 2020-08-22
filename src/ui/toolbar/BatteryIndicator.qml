@@ -110,8 +110,26 @@ Item {
             fillMode:           Image.PreserveAspectFit
             color:              qgcPal.text
         }
+//        QGCLabel {
+//            text:                   getBatteryPercentageText()
+//            font.pointSize:         ScreenTools.mediumFontPointSize
+//            color:                  getBatteryColor()
+//            anchors.verticalCenter: parent.verticalCenter
+//        }
         QGCLabel {
-            text:                   getBatteryPercentageText()
+            text:                   (activeVehicle.battery.voltage.value).toFixed(2) + "V"
+            font.pointSize:         ScreenTools.mediumFontPointSize
+            color:                  getBatteryColor()
+            anchors.verticalCenter: parent.verticalCenter
+        }
+        QGCLabel {
+            text:                   " / " + (activeVehicle.battery.current.value).toFixed(2) + "A"
+            font.pointSize:         ScreenTools.mediumFontPointSize
+            color:                  getBatteryColor()
+            anchors.verticalCenter: parent.verticalCenter
+        }
+        QGCLabel {
+            text:                   " / " + (activeVehicle.battery.voltage.value * activeVehicle.battery.current.value).toFixed(2) + "Wt"
             font.pointSize:         ScreenTools.mediumFontPointSize
             color:                  getBatteryColor()
             anchors.verticalCenter: parent.verticalCenter
