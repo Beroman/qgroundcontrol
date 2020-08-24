@@ -1058,6 +1058,14 @@ void LinkManager::_freeMavlinkChannel(int channel)
     _mavlinkChannelsUsedBitMask &= ~(1 << channel);
 }
 
+void LinkManager::testRTKUDPConnection()
+{
+    RTKSettings* rtkSettings = qgcApp()->toolbox()->settingsManager()->rtkSettings();
+    QString port = rtkSettings->udpPort()->rawValue().toString();
+
+    qDebug() << "\n LinkManager::testRTKUDPConnection()" << port;
+}
+
 void LinkManager::_mavlinkMessageReceived(LinkInterface* link, mavlink_message_t message) {
     link->startMavlinkMessagesTimer(message.sysid);
 }

@@ -26,6 +26,21 @@
     "qgcRebootRequired":    true
 },
 {
+    "name":                 "useUDP",
+    "shortDescription":     "Use UDP",
+    "longDescription":      "Use UDP to connect to RTK",
+    "type":                 "bool",
+    "defaultValue":         false,
+    "qgcRebootRequired":    false
+},
+{
+    "name":                 "udpPort",
+    "shortDescription":     "Port",
+    "type":                 "string",
+    "defaultValue":         "14400",
+    "qgcRebootRequired":    false
+},
+{
     "name":                 "useFixedBasePosition",
     "shortDescription":     "Use specified base position",
     "longDescription":      "Specify the values for the RTK base position without having to do a survey in.",

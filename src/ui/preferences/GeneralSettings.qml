@@ -858,6 +858,37 @@ Rectangle {
                             property bool useFixedPosition: rtkSettings.useFixedBasePosition.rawValue
                             property real firstColWidth:    ScreenTools.defaultFontPixelWidth * 3
 
+                            FactCheckBox {
+                                text:                   rtkGrid.rtkSettings.useUDP.shortDescription
+                                fact:                   rtkGrid.rtkSettings.useUDP
+                                visible:                rtkGrid.rtkSettings.useUDP.visible
+                                Layout.columnSpan:      3
+                            }
+
+                            Item { width: rtkGrid.firstColWidth; height: 1 }
+
+                            QGCLabel {
+                                text:               rtkGrid.rtkSettings.udpPort.shortDescription
+                                visible:            rtkGrid.rtkSettings.udpPort.visible
+                                enabled:            rtkGrid.rtkSettings.useUDP.value === true
+                            }
+                            FactTextField {
+                                fact:               rtkGrid.rtkSettings.udpPort
+                                visible:            rtkGrid.rtkSettings.udpPort.visible
+                                enabled:            rtkGrid.rtkSettings.useUDP.value === true
+                                Layout.preferredWidth:  _valueFieldWidth
+                            }
+                            Item { width: rtkGrid.firstColWidth; height: 1 }
+
+                            QGCButton {
+                                text:               qsTr("Test Connection")
+                                Layout.fillWidth:   true
+                                enabled:            rtkGrid.rtkSettings.useUDP.value === true
+                                onClicked: {
+                                    rtkGrid.rtkSettings.testUDPConnection()
+                                }
+                            }
+
                             QGCRadioButton {
                                 text:               qsTr("Perform Survey-In")
                                 visible:            rtkGrid.rtkSettings.useFixedBasePosition.visible
@@ -974,8 +1005,8 @@ Rectangle {
                         visible:    QGroundControl.settingsManager.adsbVehicleManagerSettings.visible
                     }
                     Rectangle {
-                        Layout.preferredHeight: adsbGrid.y + adsbGrid.height + _margins
-                        Layout.preferredWidth:  adsbGrid.width + (_margins * 2)
+                        Layout.preferredHeight: rtkUdpGrid.y + rtkUdpGrid.height + _margins
+                        Layout.preferredWidth:  rtkUdpGrid.width + (_margins * 2)
                         color:                  qgcPal.windowShade
                         visible:                adsbSectionLabel.visible
                         Layout.fillWidth:       true
@@ -992,7 +1023,7 @@ Rectangle {
                         }
 
                         GridLayout {
-                            id:                         adsbGrid
+                            id:                         rtkUdpGrid
                             anchors.topMargin:          _margins
                             anchors.top:                warningLabel.bottom
                             Layout.fillWidth:           true
@@ -1002,29 +1033,29 @@ Rectangle {
                             property var  adsbSettings:    QGroundControl.settingsManager.adsbVehicleManagerSettings
 
                             FactCheckBox {
-                                text:                   adsbGrid.adsbSettings.adsbServerConnectEnabled.shortDescription
-                                fact:                   adsbGrid.adsbSettings.adsbServerConnectEnabled
-                                visible:                adsbGrid.adsbSettings.adsbServerConnectEnabled.visible
+                                text:                   rtkUdpGrid.adsbSettings.adsbServerConnectEnabled.shortDescription
+                                fact:                   rtkUdpGrid.adsbSettings.adsbServerConnectEnabled
+                                visible:                rtkUdpGrid.adsbSettings.adsbServerConnectEnabled.visible
                                 Layout.columnSpan:      2
                             }
 
                             QGCLabel {
-                                text:               adsbGrid.adsbSettings.adsbServerHostAddress.shortDescription
-                                visible:            adsbGrid.adsbSettings.adsbServerHostAddress.visible
+                                text:               rtkUdpGrid.adsbSettings.adsbServerHostAddress.shortDescription
+                                visible:            rtkUdpGrid.adsbSettings.adsbServerHostAddress.visible
                             }
                             FactTextField {
-                                fact:                   adsbGrid.adsbSettings.adsbServerHostAddress
-                                visible:                adsbGrid.adsbSettings.adsbServerHostAddress.visible
+                                fact:                   rtkUdpGrid.adsbSettings.adsbServerHostAddress
+                                visible:                rtkUdpGrid.adsbSettings.adsbServerHostAddress.visible
                                 Layout.preferredWidth:  _valueFieldWidth
                             }
 
                             QGCLabel {
-                                text:               adsbGrid.adsbSettings.adsbServerPort.shortDescription
-                                visible:            adsbGrid.adsbSettings.adsbServerPort.visible
+                                text:               rtkUdpGrid.adsbSettings.adsbServerPort.shortDescription
+                                visible:            rtkUdpGrid.adsbSettings.adsbServerPort.visible
                             }
                             FactTextField {
-                                fact:                   adsbGrid.adsbSettings.adsbServerPort
-                                visible:                adsbGrid.adsbSettings.adsbServerPort.visible
+                                fact:                   rtkUdpGrid.adsbSettings.adsbServerPort
+                                visible:                rtkUdpGrid.adsbSettings.adsbServerPort.visible
                                 Layout.preferredWidth:  _valueFieldWidth
                             }
                         }
