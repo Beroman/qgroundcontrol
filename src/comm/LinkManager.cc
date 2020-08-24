@@ -566,14 +566,14 @@ void LinkManager::_updateAutoConnectLinks(void)
 
     // Iterate Comm Ports
     for (const QGCSerialPortInfo& portInfo: portList) {
-        qCDebug(LinkManagerVerboseLog) << "-----------------------------------------------------";
-        qCDebug(LinkManagerVerboseLog) << "portName:          " << portInfo.portName();
-        qCDebug(LinkManagerVerboseLog) << "systemLocation:    " << portInfo.systemLocation();
-        qCDebug(LinkManagerVerboseLog) << "description:       " << portInfo.description();
-        qCDebug(LinkManagerVerboseLog) << "manufacturer:      " << portInfo.manufacturer();
-        qCDebug(LinkManagerVerboseLog) << "serialNumber:      " << portInfo.serialNumber();
-        qCDebug(LinkManagerVerboseLog) << "vendorIdentifier:  " << portInfo.vendorIdentifier();
-        qCDebug(LinkManagerVerboseLog) << "productIdentifier: " << portInfo.productIdentifier();
+        qDebug() << "-----------------------------------------------------";
+        qDebug() << "portName:          " << portInfo.portName();
+        qDebug() << "systemLocation:    " << portInfo.systemLocation();
+        qDebug() << "description:       " << portInfo.description();
+        qDebug() << "manufacturer:      " << portInfo.manufacturer();
+        qDebug() << "serialNumber:      " << portInfo.serialNumber();
+        qDebug() << "vendorIdentifier:  " << portInfo.vendorIdentifier();
+        qDebug() << "productIdentifier: " << portInfo.productIdentifier();
 
         // Save port name
         currentPorts << portInfo.systemLocation();

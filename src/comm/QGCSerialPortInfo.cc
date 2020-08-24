@@ -299,7 +299,7 @@ QList<QGCSerialPortInfo> QGCSerialPortInfo::availablePorts(void)
 
     for(QSerialPortInfo portInfo: QSerialPortInfo::availablePorts()) {
         if (!isSystemPort(&portInfo)) {
-            if (seenSerialNumbers.contains(portInfo.serialNumber())) {
+            if (!portInfo.serialNumber().isEmpty() && seenSerialNumbers.contains(portInfo.serialNumber())) {
                 // Some boards are a composite USB device, with the first port being mavlink and the second something else
                 qCDebug(QGCSerialPortInfoLog) << "Skipping secondary port on same device" << portInfo.portName() << portInfo.serialNumber();
                 continue;
