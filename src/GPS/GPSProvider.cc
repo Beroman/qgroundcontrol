@@ -49,7 +49,7 @@ void GPSProvider::run()
         connect(_udp, &QIODevice::readyRead, this, []() { qDebug() << "\n ready read!"; });
         //_udp->bind(QHostAddress::AnyIPv4, 2323);
         //_udp->connectToHost(QHostAddress::AnyIPv4, 2323);
-        _udp->connectToHost("192.168.202.150", 23);
+        _udp->connectToHost("192.168.202.150", 2323);
         //_udp->connectToHost("google.com", 80);
 
         // we need to wait...
