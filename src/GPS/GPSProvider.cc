@@ -41,33 +41,54 @@ void GPSProvider::run()
         }
         delete[] fakeData;
 #endif /* SIMULATE_RTCM_OUTPUT */
+    if (_isUDP)
+    {
+        if (_udp) delete _udp;
+        _type = GPSType::u_blox;
+        _udp = new QTcpSocket();
+        connect(_udp, &QIODevice::readyRead, this, []() { qDebug() << "\n ready read!"; });
+        //_udp->bind(QHostAddress::AnyIPv4, 2323);
+        //_udp->connectToHost(QHostAddress::AnyIPv4, 2323);
+        _udp->connectToHost("192.168.202.150", 23);
+        //_udp->connectToHost("google.com", 80);
 
-    if (_serial) delete _serial;
+        // we need to wait...
+        if(!_udp->waitForConnected(5000))
+        {
+            qDebug() << "Error: " << _udp->errorString();
+        }
 
-    _serial = new QSerialPort();
-    _serial->setPortName(_device);
-    if (!_serial->open(QIODevice::ReadWrite)) {
-        int retries = 60;
-        // Give the device some time to come up. In some cases the device is not
-        // immediately accessible right after startup for some reason. This can take 10-20s.
-        while (retries-- > 0 && _serial->error() == QSerialPort::PermissionError) {
-            qCDebug(RTKGPSLog) << "Cannot open device... retrying";
-            msleep(500);
-            if (_serial->open(QIODevice::ReadWrite)) {
-                _serial->clearError();
-                break;
+        qDebug() << "\n UDP connect" << _udp->state();
+
+    } else
+    {
+        if (_serial) delete _serial;
+
+        _serial = new QSerialPort();
+        _serial->setPortName(_device);
+        if (!_serial->open(QIODevice::ReadWrite)) {
+            int retries = 60;
+            // Give the device some time to come up. In some cases the device is not
+            // immediately accessible right after startup for some reason. This can take 10-20s.
+            while (retries-- > 0 && _serial->error() == QSerialPort::PermissionError) {
+                qCDebug(RTKGPSLog) << "Cannot open device... retrying";
+                msleep(500);
+                if (_serial->open(QIODevice::ReadWrite)) {
+                    _serial->clearError();
+                    break;
+                }
+            }
+            if (_serial->error() != QSerialPort::NoError) {
+                qWarning() << "GPS: Failed to open Serial Device" << _device << _serial->errorString();
+                return;
             }
         }
-        if (_serial->error() != QSerialPort::NoError) {
-            qWarning() << "GPS: Failed to open Serial Device" << _device << _serial->errorString();
-            return;
-        }
+        _serial->setBaudRate(QSerialPort::Baud9600);
+        _serial->setDataBits(QSerialPort::Data8);
+        _serial->setParity(QSerialPort::NoParity);
+        _serial->setStopBits(QSerialPort::OneStop);
+        _serial->setFlowControl(QSerialPort::NoFlowControl);
     }
-    _serial->setBaudRate(QSerialPort::Baud9600);
-    _serial->setDataBits(QSerialPort::Data8);
-    _serial->setParity(QSerialPort::NoParity);
-    _serial->setStopBits(QSerialPort::OneStop);
-    _serial->setFlowControl(QSerialPort::NoFlowControl);
 
     unsigned int baudrate;
     GPSBaseStationSupport* gpsDriver = nullptr;
@@ -87,7 +108,7 @@ void GPSProvider::run()
             baudrate = 0; // auto-configure
         } else {
             gpsDriver = new GPSDriverUBX(GPSDriverUBX::Interface::UART, &callbackEntry, this, &_reportGpsPos, _pReportSatInfo);
-            baudrate = 0; // auto-configure
+            baudrate = 57600; // auto-configure
         }
         gpsDriver->setSurveyInSpecs(_surveyInAccMeters * 10000.0f, _surveryInDurationSecs);
 
@@ -96,6 +117,7 @@ void GPSProvider::run()
         }
 
         if (gpsDriver->configure(baudrate, GPSDriverUBX::OutputMode::RTCM) == 0) {
+            qDebug() << "\n AAAA";
 
             /* reset report */
             memset(&_reportGpsPos, 0, sizeof(_reportGpsPos));
@@ -106,7 +128,7 @@ void GPSProvider::run()
 
             while (!_requestStop && numTries < 3) {
                 int helperRet = gpsDriver->receive(GPS_RECEIVE_TIMEOUT);
-
+                qDebug() << "\n !result!" << helperRet;
                 if (helperRet > 0) {
                     numTries = 0;
 
@@ -123,7 +145,11 @@ void GPSProvider::run()
                     ++numTries;
                 }
             }
-            if (_serial->error() != QSerialPort::NoError && _serial->error() != QSerialPort::TimeoutError) {
+            if (_isUDP) {
+                //check state & errors
+                qDebug() << "\n UDP" << _udp->state() << _udp->errorString();
+            }
+            if (!_isUDP && _serial->error() != QSerialPort::NoError && _serial->error() != QSerialPort::TimeoutError) {
                 break;
             }
         }
@@ -141,7 +167,8 @@ GPSProvider::GPSProvider(const QString& device,
                          double     fixedBaseLongitude,
                          float      fixedBaseAltitudeMeters,
                          float      fixedBaseAccuracyMeters,
-                         const std::atomic_bool& requestStop)
+                         const std::atomic_bool& requestStop,
+                         bool       udp)
     : _device                   (device)
     , _type                     (type)
     , _requestStop              (requestStop)
@@ -152,6 +179,7 @@ GPSProvider::GPSProvider(const QString& device,
     , _fixedBaseLongitude       (fixedBaseLongitude)
     , _fixedBaseAltitudeMeters  (fixedBaseAltitudeMeters)
     , _fixedBaseAccuracyMeters  (fixedBaseAccuracyMeters)
+    , _isUDP                    (udp)
 {
     qCDebug(RTKGPSLog) << "Survey in accuracy:duration" << surveyInAccMeters << surveryInDurationSecs;
     if (enableSatInfo) _pReportSatInfo = new satellite_info_s();
@@ -161,12 +189,15 @@ GPSProvider::~GPSProvider()
 {
     if (_pReportSatInfo) delete(_pReportSatInfo);
     if (_serial) delete _serial;
+    if (_udp) delete _udp;
 }
 
 void GPSProvider::publishGPSPosition()
 {
     GPSPositionMessage msg;
     msg.position_data = _reportGpsPos;
+    qDebug() << "\n GPSProvider::publishGPSPosition()" << msg.position_data.lat << msg.position_data.lon
+             << msg.position_data.satellites_used;
     emit positionUpdate(msg);
 }
 
@@ -193,22 +224,47 @@ int GPSProvider::callback(GPSCallbackType type, void *data1, int data2)
 {
     switch (type) {
         case GPSCallbackType::readDeviceData: {
-            if (_serial->bytesAvailable() == 0) {
+            //qDebug() << "\n GPSCallbackType::readDeviceDatd";
+            QIODevice* ioDevice = nullptr;
+            if (_isUDP)
+            {
+                ioDevice = _udp;
+            } else
+            {
+                ioDevice = _serial;
+            }
+            if (ioDevice->bytesAvailable() == 0) {
                 int timeout = *((int *) data1);
-                if (!_serial->waitForReadyRead(timeout))
+                if (!ioDevice->waitForReadyRead(timeout))
                     return 0; //timeout
             }
-            return (int)_serial->read((char*) data1, data2);
-        }
+            int result = (int)ioDevice->read((char*) data1, data2);
+            qDebug() << "\n read" << data1 << QString((char*) data1) << data2 << result;
+            return result;
+        } break;
         case GPSCallbackType::writeDeviceData:
-            if (_serial->write((char*) data1, data2) >= 0) {
-                if (_serial->waitForBytesWritten(-1))
+        {
+         //qDebug() << "\n GPSCallbackType::writeDeviceDatd";
+            QIODevice* ioDevice = nullptr;
+            if (_isUDP)
+            {
+                ioDevice = _udp;
+            } else
+            {
+                ioDevice = _serial;
+            }
+            if (ioDevice->write((char*) data1, data2) >= 0) {
+                if (ioDevice->waitForBytesWritten(-1))
+                {
+                    //qDebug() << "\n written" << data1;
                     return data2;
+                }
             }
             return -1;
+        } break;
 
-        case GPSCallbackType::setBaudrate:
-            return _serial->setBaudRate(data2) ? 0 : -1;
+        case GPSCallbackType::setBaudrate:          
+            return _serial && _serial->setBaudRate(data2) ? 0 : -1;
 
         case GPSCallbackType::gotRTCMMessage:
             gotRTCMData((uint8_t*) data1, data2);

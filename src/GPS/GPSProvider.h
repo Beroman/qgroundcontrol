@@ -14,6 +14,8 @@
 #include <QThread>
 #include <QByteArray>
 #include <QSerialPort>
+#include <QUdpSocket>
+#include <QTcpSocket>
 
 #include <atomic>
 
@@ -46,7 +48,8 @@ public:
                 double  fixedBaseLongitude,
                 float   fixedBaseAltitudeMeters,
                 float   fixedBaseAccuracyMeters,
-                const std::atomic_bool& requestStop);
+                const std::atomic_bool& requestStop,
+                bool    udp);
     ~GPSProvider();
 
     /**
@@ -84,9 +87,11 @@ private:
     double  _fixedBaseLongitude;
     float   _fixedBaseAltitudeMeters;
     float   _fixedBaseAccuracyMeters;
+    bool    _isUDP;
 
 	struct sensor_gps_s        _reportGpsPos;
 	struct satellite_info_s    *_pReportSatInfo = nullptr;
 
 	QSerialPort *_serial = nullptr;
+    QTcpSocket  *_udp    = nullptr;
 };
