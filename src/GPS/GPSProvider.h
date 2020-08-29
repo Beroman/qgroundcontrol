@@ -49,7 +49,7 @@ public:
                 float   fixedBaseAltitudeMeters,
                 float   fixedBaseAccuracyMeters,
                 const std::atomic_bool& requestStop,
-                bool    udp);
+                bool    tcp);
     ~GPSProvider();
 
     /**
@@ -87,11 +87,11 @@ private:
     double  _fixedBaseLongitude;
     float   _fixedBaseAltitudeMeters;
     float   _fixedBaseAccuracyMeters;
-    bool    _isUDP;
+    bool    _isTCP;
 
 	struct sensor_gps_s        _reportGpsPos;
 	struct satellite_info_s    *_pReportSatInfo = nullptr;
 
 	QSerialPort *_serial = nullptr;
-    QTcpSocket  *_udp    = nullptr;
+    QTcpSocket  *_tcp    = nullptr;
 };

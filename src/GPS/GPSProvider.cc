@@ -41,24 +41,24 @@ void GPSProvider::run()
         }
         delete[] fakeData;
 #endif /* SIMULATE_RTCM_OUTPUT */
-    if (_isUDP)
+    if (_isTCP)
     {
-        if (_udp) delete _udp;
+        if (_tcp) delete _tcp;
         _type = GPSType::u_blox;
-        _udp = new QTcpSocket();
-        connect(_udp, &QIODevice::readyRead, this, []() { qDebug() << "\n ready read!"; });
+        _tcp = new QTcpSocket();
+        connect(_tcp, &QIODevice::readyRead, this, []() { qDebug() << "\n ready read!"; });
         //_udp->bind(QHostAddress::AnyIPv4, 2323);
         //_udp->connectToHost(QHostAddress::AnyIPv4, 2323);
-        _udp->connectToHost("192.168.202.150", 2323);
+        _tcp->connectToHost("192.168.202.150", 2323);
         //_udp->connectToHost("google.com", 80);
 
         // we need to wait...
-        if(!_udp->waitForConnected(5000))
+        if(!_tcp->waitForConnected(5000))
         {
-            qDebug() << "Error: " << _udp->errorString();
+            qDebug() << "Error: " << _tcp->errorString();
         }
 
-        qDebug() << "\n UDP connect" << _udp->state();
+        qDebug() << "\n TCP connect" << _tcp->state();
 
     } else
     {
@@ -145,11 +145,11 @@ void GPSProvider::run()
                     ++numTries;
                 }
             }
-            if (_isUDP) {
+            if (_isTCP) {
                 //check state & errors
-                qDebug() << "\n UDP" << _udp->state() << _udp->errorString();
+                qDebug() << "\n TCP" << _tcp->state() << _tcp->errorString();
             }
-            if (!_isUDP && _serial->error() != QSerialPort::NoError && _serial->error() != QSerialPort::TimeoutError) {
+            if (!_isTCP && _serial->error() != QSerialPort::NoError && _serial->error() != QSerialPort::TimeoutError) {
                 break;
             }
         }
@@ -168,7 +168,7 @@ GPSProvider::GPSProvider(const QString& device,
                          float      fixedBaseAltitudeMeters,
                          float      fixedBaseAccuracyMeters,
                          const std::atomic_bool& requestStop,
-                         bool       udp)
+                         bool       tcp)
     : _device                   (device)
     , _type                     (type)
     , _requestStop              (requestStop)
@@ -179,7 +179,7 @@ GPSProvider::GPSProvider(const QString& device,
     , _fixedBaseLongitude       (fixedBaseLongitude)
     , _fixedBaseAltitudeMeters  (fixedBaseAltitudeMeters)
     , _fixedBaseAccuracyMeters  (fixedBaseAccuracyMeters)
-    , _isUDP                    (udp)
+    , _isTCP                    (tcp)
 {
     qCDebug(RTKGPSLog) << "Survey in accuracy:duration" << surveyInAccMeters << surveryInDurationSecs;
     if (enableSatInfo) _pReportSatInfo = new satellite_info_s();
@@ -189,7 +189,7 @@ GPSProvider::~GPSProvider()
 {
     if (_pReportSatInfo) delete(_pReportSatInfo);
     if (_serial) delete _serial;
-    if (_udp) delete _udp;
+    if (_tcp) delete _tcp;
 }
 
 void GPSProvider::publishGPSPosition()
@@ -226,9 +226,9 @@ int GPSProvider::callback(GPSCallbackType type, void *data1, int data2)
         case GPSCallbackType::readDeviceData: {
             //qDebug() << "\n GPSCallbackType::readDeviceDatd";
             QIODevice* ioDevice = nullptr;
-            if (_isUDP)
+            if (_isTCP)
             {
-                ioDevice = _udp;
+                ioDevice = _tcp;
             } else
             {
                 ioDevice = _serial;
@@ -246,9 +246,9 @@ int GPSProvider::callback(GPSCallbackType type, void *data1, int data2)
         {
          //qDebug() << "\n GPSCallbackType::writeDeviceDatd";
             QIODevice* ioDevice = nullptr;
-            if (_isUDP)
+            if (_isTCP)
             {
-                ioDevice = _udp;
+                ioDevice = _tcp;
             } else
             {
                 ioDevice = _serial;
