@@ -46,11 +46,11 @@ void GPSProvider::run()
         if (_tcp) delete _tcp;
         _type = GPSType::u_blox;
         _tcp = new QTcpSocket();
-        connect(_tcp, &QIODevice::readyRead, this, []() { qDebug() << "\n ready read!"; });
+        //connect(_tcp, &QIODevice::readyRead, this, []() { qDebug() << "\n ready read!"; });
         //_udp->bind(QHostAddress::AnyIPv4, 2323);
         //_udp->connectToHost(QHostAddress::AnyIPv4, 2323);
         _tcp->connectToHost("192.168.202.150", 2323);
-        //_udp->connectToHost("google.com", 80);
+        //_tcp->connectToHost("google.com", 80);
 
         // we need to wait...
         if(!_tcp->waitForConnected(5000))
@@ -62,6 +62,7 @@ void GPSProvider::run()
 
     } else
     {
+        #ifndef NO_SERIAL_LINK
         if (_serial) delete _serial;
 
         _serial = new QSerialPort();
@@ -88,6 +89,7 @@ void GPSProvider::run()
         _serial->setParity(QSerialPort::NoParity);
         _serial->setStopBits(QSerialPort::OneStop);
         _serial->setFlowControl(QSerialPort::NoFlowControl);
+#endif
     }
 
     unsigned int baudrate;
@@ -149,9 +151,11 @@ void GPSProvider::run()
                 //check state & errors
                 qDebug() << "\n TCP" << _tcp->state() << _tcp->errorString();
             }
+            #ifndef NO_SERIAL_LINK
             if (!_isTCP && _serial->error() != QSerialPort::NoError && _serial->error() != QSerialPort::TimeoutError) {
                 break;
             }
+#endif
         }
     }
     qCDebug(RTKGPSLog) << "Exiting GPS thread";
@@ -188,7 +192,9 @@ GPSProvider::GPSProvider(const QString& device,
 GPSProvider::~GPSProvider()
 {
     if (_pReportSatInfo) delete(_pReportSatInfo);
+#ifndef NO_SERIAL_LINK
     if (_serial) delete _serial;
+#endif
     if (_tcp) delete _tcp;
 }
 
@@ -231,15 +237,21 @@ int GPSProvider::callback(GPSCallbackType type, void *data1, int data2)
                 ioDevice = _tcp;
             } else
             {
+                #ifndef NO_SERIAL_LINK
                 ioDevice = _serial;
+                #endif
             }
-            if (ioDevice->bytesAvailable() == 0) {
-                int timeout = *((int *) data1);
-                if (!ioDevice->waitForReadyRead(timeout))
-                    return 0; //timeout
+            int result = -1;
+            if (ioDevice)
+            {
+                if (ioDevice->bytesAvailable() == 0) {
+                    int timeout = *((int *) data1);
+                    if (!ioDevice->waitForReadyRead(timeout))
+                        return 0; //timeout
+                }
+                result = (int)ioDevice->read((char*) data1, data2);
+               // qDebug() << "\n read" << data1 << QString((char*) data1) << data2 << result;
             }
-            int result = (int)ioDevice->read((char*) data1, data2);
-            qDebug() << "\n read" << data1 << QString((char*) data1) << data2 << result;
             return result;
         } break;
         case GPSCallbackType::writeDeviceData:
@@ -251,20 +263,22 @@ int GPSProvider::callback(GPSCallbackType type, void *data1, int data2)
                 ioDevice = _tcp;
             } else
             {
+                #ifndef NO_SERIAL_LINK
                 ioDevice = _serial;
+                #endif
             }
-            if (ioDevice->write((char*) data1, data2) >= 0) {
+            if (ioDevice && ioDevice->write((char*) data1, data2) >= 0) {
                 if (ioDevice->waitForBytesWritten(-1))
                 {
-                    //qDebug() << "\n written" << data1;
                     return data2;
                 }
             }
             return -1;
         } break;
-
+#ifndef NO_SERIAL_LINK
         case GPSCallbackType::setBaudrate:          
             return _serial && _serial->setBaudRate(data2) ? 0 : -1;
+#endif
 
         case GPSCallbackType::gotRTCMMessage:
             gotRTCMData((uint8_t*) data1, data2);

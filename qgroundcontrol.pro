@@ -134,9 +134,11 @@ iOSBuild {
             QMAKE_INFO_PLIST  = $${SOURCE_DIR}/ios/iOS-Info.plist
             OTHER_FILES      += $${SOURCE_DIR}/ios/iOS-Info.plist
         }
+        QMAKE_TARGET_BUNDLE_PREFIX = com.bero
+        QMAKE_BUNDLE = droneshow
         QMAKE_ASSET_CATALOGS += ios/Images.xcassets
         BUNDLE.files          = ios/QGCLaunchScreen.xib $$QMAKE_INFO_PLIST
-        QMAKE_BUNDLE_DATA    += BUNDLE
+        QMAKE_BUNDLE_DATA    += BUNDLE        
     }
 }
 
@@ -760,7 +762,7 @@ HEADERS += \
     src/comm/SerialLink.h \
 }
 
-!MobileBuild {
+#!MobileBuild {
 HEADERS += \
     src/GPS/Drivers/src/gps_helper.h \
     src/GPS/Drivers/src/rtcm.h \
@@ -774,8 +776,11 @@ HEADERS += \
     src/GPS/definitions.h \
     src/GPS/satellite_info.h \
     src/GPS/vehicle_gps_position.h \
+    src/RunGuard.h
+#}
+!MobileBuild {
+HEADERS += \
     src/Joystick/JoystickSDL.h \
-    src/RunGuard.h \
 }
 
 iOSBuild {
@@ -967,7 +972,7 @@ contains (DEFINES, QGC_ENABLE_PAIRING) {
     }
 }
 
-!MobileBuild {
+#!MobileBuild {
 SOURCES += \
     src/GPS/Drivers/src/gps_helper.cpp \
     src/GPS/Drivers/src/rtcm.cpp \
@@ -977,8 +982,12 @@ SOURCES += \
     src/GPS/GPSManager.cc \
     src/GPS/GPSProvider.cc \
     src/GPS/RTCM/RTCMMavlink.cc \
-    src/Joystick/JoystickSDL.cc \
     src/RunGuard.cc \
+#}
+
+!MobileBuild {
+SOURCES += \
+    src/Joystick/JoystickSDL.cc
 }
 
 #

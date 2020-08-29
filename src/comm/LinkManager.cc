@@ -26,10 +26,10 @@
 #include "BluetoothLink.h"
 #endif
 
-#ifndef __mobile__
+//#ifndef __mobile__
 #include "GPSManager.h"
 #include "PositionManager.h"
-#endif
+//#endif
 
 #ifdef QT_DEBUG
 #include "MockLink.h"

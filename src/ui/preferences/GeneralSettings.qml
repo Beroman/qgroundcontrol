@@ -885,6 +885,7 @@ Rectangle {
                                 Layout.fillWidth:   true
                                 enabled:            rtkGrid.rtkSettings.useUDP.value === true
                                 onClicked: {
+                                    print("\n rtkGrid.rtkSettings.testUDPConnection() ")
                                     rtkGrid.rtkSettings.testUDPConnection()
                                 }
                             }

@@ -13,7 +13,9 @@
 #include <QString>
 #include <QThread>
 #include <QByteArray>
+#ifndef NO_SERIAL_LINK
 #include <QSerialPort>
+#endif
 #include <QUdpSocket>
 #include <QTcpSocket>
 
@@ -91,7 +93,8 @@ private:
 
 	struct sensor_gps_s        _reportGpsPos;
 	struct satellite_info_s    *_pReportSatInfo = nullptr;
-
+#ifndef NO_SERIAL_LINK
 	QSerialPort *_serial = nullptr;
+#endif
     QTcpSocket  *_tcp    = nullptr;
 };

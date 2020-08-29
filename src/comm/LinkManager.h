@@ -22,10 +22,10 @@
 #include "QGCLoggingCategory.h"
 #include "QGCToolbox.h"
 #include "MAVLinkProtocol.h"
-#if !defined(__mobile__)
+//#if !defined(__mobile__)
 #include "LogReplayLink.h"
 #include "UdpIODevice.h"
-#endif
+//#endif
 #include "QmlObjectListModel.h"
 
 #ifndef NO_SERIAL_LINK

@@ -12,6 +12,7 @@
 
 #include <QQmlEngine>
 #include <QtQml>
+#include <QDebug>
 
 DECLARE_SETTINGGROUP(RTK, "RTK")
 {
@@ -20,6 +21,7 @@ DECLARE_SETTINGGROUP(RTK, "RTK")
 
 void RTKSettings::testUDPConnection()
 {
+    qDebug() << "\n qgcApp()->toolbox()->linkManager()->testRTKUDPConnection();";
     qgcApp()->toolbox()->linkManager()->testRTKUDPConnection();
 }
 
