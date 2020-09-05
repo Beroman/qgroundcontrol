@@ -110,7 +110,7 @@ void GPSProvider::run()
             baudrate = 0; // auto-configure
         } else {
             gpsDriver = new GPSDriverUBX(GPSDriverUBX::Interface::UART, &callbackEntry, this, &_reportGpsPos, _pReportSatInfo);
-            baudrate = 57600; // auto-configure
+            baudrate = 115200; // auto-configure
         }
         gpsDriver->setSurveyInSpecs(_surveyInAccMeters * 10000.0f, _surveryInDurationSecs);
 
