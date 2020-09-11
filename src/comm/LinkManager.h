@@ -161,7 +161,7 @@ public:
     /// Free the specified mavlink channel for re-use
     void _freeMavlinkChannel(int channel);
 
-    void testRTKUDPConnection();
+    void connectRTKViaTcp(bool connect = true);
 
     static const char*  settingsGroup;
 

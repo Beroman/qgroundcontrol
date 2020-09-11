@@ -16,17 +16,25 @@
 
 DECLARE_SETTINGGROUP(RTK, "RTK")
 {
+    tcpConnected()->setRawValue(false);
+    connect(useTCP(), &SettingsFact::rawValueChanged, this, [this]() {
+        if (!useTCP()->rawValue().toBool() && _tcpConnectedFact->rawValue().toBool())
+        {
+            qgcApp()->toolbox()->linkManager()->connectRTKViaTcp(false);
+        }
+    });
     qmlRegisterUncreatableType<RTKSettings>("QGroundControl.SettingsManager", 1, 0, "RTKSettings", "Reference only"); \
 }
 
-void RTKSettings::testUDPConnection()
+void RTKSettings::onConnectBtnClicked()
 {
-    qDebug() << "\n qgcApp()->toolbox()->linkManager()->testRTKUDPConnection();";
-    qgcApp()->toolbox()->linkManager()->testRTKUDPConnection();
+    qgcApp()->toolbox()->linkManager()->connectRTKViaTcp(!tcpConnected()->rawValue().toBool());
 }
 
-DECLARE_SETTINGSFACT(RTKSettings, useUDP)
-DECLARE_SETTINGSFACT(RTKSettings, udpPort)
+DECLARE_SETTINGSFACT(RTKSettings, useTCP)
+DECLARE_SETTINGSFACT(RTKSettings, tcpHost)
+DECLARE_SETTINGSFACT(RTKSettings, tcpPort)
+DECLARE_SETTINGSFACT(RTKSettings, tcpConnected)
 DECLARE_SETTINGSFACT(RTKSettings, surveyInAccuracyLimit)
 DECLARE_SETTINGSFACT(RTKSettings, surveyInMinObservationDuration)
 DECLARE_SETTINGSFACT(RTKSettings, useFixedBasePosition)

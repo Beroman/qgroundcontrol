@@ -26,18 +26,33 @@
     "qgcRebootRequired":    true
 },
 {
-    "name":                 "useUDP",
-    "shortDescription":     "Use UDP",
-    "longDescription":      "Use UDP to connect to RTK",
+    "name":                 "useTCP",
+    "shortDescription":     "Use TCP",
+    "longDescription":      "Use TCP to connect to RTK",
     "type":                 "bool",
     "defaultValue":         false,
     "qgcRebootRequired":    false
 },
 {
-    "name":                 "udpPort",
+    "name":                 "tcpHost",
+    "shortDescription":     "Host adress",
+    "type":                 "string",
+    "defaultValue":         "192.168.202.150",
+    "qgcRebootRequired":    false
+},
+{
+    "name":                 "tcpPort",
     "shortDescription":     "Port",
     "type":                 "string",
-    "defaultValue":         "14400",
+    "defaultValue":         "2323",
+    "qgcRebootRequired":    false
+},
+{
+    "name":                 "tcpConnected",
+    "shortDescription":     "",
+    "longDescription":      "",
+    "type":                 "bool",
+    "defaultValue":         false,
     "qgcRebootRequired":    false
 },
 {

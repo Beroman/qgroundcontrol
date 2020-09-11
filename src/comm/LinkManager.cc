@@ -1058,42 +1058,15 @@ void LinkManager::_freeMavlinkChannel(int channel)
     _mavlinkChannelsUsedBitMask &= ~(1 << channel);
 }
 
-void LinkManager::testRTKUDPConnection()
+void LinkManager::connectRTKViaTcp(bool connect)
 {
-    RTKSettings* rtkSettings = qgcApp()->toolbox()->settingsManager()->rtkSettings();
-    quint16 port = rtkSettings->udpPort()->rawValue().toUInt();
-
-    qDebug() << "\n LinkManager::testRTKUDPConnection()" << port;
-
-    _toolbox->gpsManager()->connectGPS("Test RTK", "Test RTK Board", true);
-
-    /*static UdpIODevice* _udp = nullptr;
-    if (_udp) delete _udp;
-    _udp = new UdpIODevice();
-
-    connect(_udp, &QUdpSocket::hostFound, this, []() { qDebug() << "\n Host found!" << _udp->errorString(); });
-    //connect(_udp, &QIODevice::readyRead, this, []() { qDebug() << "\n ready read!" << _udp->readAll(); });
-    connect(_udp, &QIODevice::readyRead, this, []() { // when data comes in
-        QByteArray buffer;
-        buffer.resize(_udp->pendingDatagramSize());
-
-        QHostAddress sender;
-        quint16 senderPort;
-
-        // Receives a datagram no larger than maxSize bytes and stores it in data.
-        // The sender’s host address and port is stored in *address and *port
-
-        _udp->readDatagram(buffer.data(), buffer.size(),
-        &sender, &senderPort);
-        qDebug() << "Message from: " << sender.toString();
-        qDebug() << "“Message port: ”" << senderPort;
-        qDebug() << "“Message: ”" << buffer; });
-    //connect(_udp, &QUdpSocket::stateChanged, this, [this]() { qDebug() << "\n UDP state!" << _udp->state(); });
-    //_udp->bind(QHostAddress::Any, port);
-    //_udp->connectToHost(QHostAddress::AnyIPv4"192.168.202.150", port);
-    _udp->connectToHost(QHostAddress::AnyIPv4, port);
-
-    //qDebug() << "\n UDP connect" << _udp->state() << _udp->errorString();*/
+    if (connect)
+    {
+        _toolbox->gpsManager()->connectGPS("Test RTK", "Test RTK Board", true);
+    } else
+    {
+        _toolbox->gpsManager()->disconnectGPS();
+    }
 }
 
 void LinkManager::_mavlinkMessageReceived(LinkInterface* link, mavlink_message_t message) {

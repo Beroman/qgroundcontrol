@@ -17,8 +17,10 @@ class RTKSettings : public SettingsGroup
 public:
     RTKSettings(QObject* parent = nullptr);
     DEFINE_SETTING_NAME_GROUP()
-    DEFINE_SETTINGFACT(useUDP)
-    DEFINE_SETTINGFACT(udpPort)
+    DEFINE_SETTINGFACT(useTCP)
+    DEFINE_SETTINGFACT(tcpHost)
+    DEFINE_SETTINGFACT(tcpPort)
+    DEFINE_SETTINGFACT(tcpConnected)
     DEFINE_SETTINGFACT(surveyInAccuracyLimit)
     DEFINE_SETTINGFACT(surveyInMinObservationDuration)
     DEFINE_SETTINGFACT(useFixedBasePosition)
@@ -28,5 +30,5 @@ public:
     DEFINE_SETTINGFACT(fixedBasePositionAccuracy)
 
 public slots:
-    void testUDPConnection();
+    void onConnectBtnClicked();
 };

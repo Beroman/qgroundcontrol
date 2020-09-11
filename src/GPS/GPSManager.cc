@@ -26,7 +26,7 @@ GPSManager::~GPSManager()
     disconnectGPS();
 }
 
-void GPSManager::connectGPS(const QString& device, const QString& gps_type, bool _udp)
+void GPSManager::connectGPS(const QString& device, const QString& gps_type, bool _tcp)
 {
     RTKSettings* rtkSettings = qgcApp()->toolbox()->settingsManager()->rtkSettings();
 
@@ -55,7 +55,7 @@ void GPSManager::connectGPS(const QString& device, const QString& gps_type, bool
                                    rtkSettings->fixedBasePositionAltitude()->rawValue().toFloat(),
                                    rtkSettings->fixedBasePositionAccuracy()->rawValue().toFloat(),
                                    _requestGpsStop,
-                                   _udp);
+                                   _tcp);
     _gpsProvider->start();
 
     //create RTCM device

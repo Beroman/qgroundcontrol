@@ -29,6 +29,7 @@
 
 void GPSProvider::run()
 {
+    qDebug() << "\n run!";
 #ifdef SIMULATE_RTCM_OUTPUT
         const int fakeMsgLengths[3] = { 30, 170, 240 };
         uint8_t* fakeData = new uint8_t[fakeMsgLengths[2]];
@@ -44,21 +45,20 @@ void GPSProvider::run()
     if (_isTCP)
     {
         if (_tcp) delete _tcp;
+
         _type = GPSType::u_blox;
         _tcp = new QTcpSocket();
-        //connect(_tcp, &QIODevice::readyRead, this, []() { qDebug() << "\n ready read!"; });
-        //_udp->bind(QHostAddress::AnyIPv4, 2323);
-        //_udp->connectToHost(QHostAddress::AnyIPv4, 2323);
-        _tcp->connectToHost("192.168.202.150", 2323);
-        //_tcp->connectToHost("google.com", 80);
-
+        RTKSettings* rtkSettings = qgcApp()->toolbox()->settingsManager()->rtkSettings();
+        QString host = rtkSettings->tcpHost()->rawValue().toString();
+        quint16 port = rtkSettings->tcpPort()->rawValue().toUInt();
+        connect(_tcp, &QTcpSocket::connected,    this, [rtkSettings](){rtkSettings->tcpConnected()->setRawValue(true); });
+        connect(_tcp, &QTcpSocket::disconnected, this, [rtkSettings](){rtkSettings->tcpConnected()->setRawValue(false); });
+        _tcp->connectToHost(host, port);
         // we need to wait...
         if(!_tcp->waitForConnected(5000))
         {
             qDebug() << "Error: " << _tcp->errorString();
-        }
-
-        qDebug() << "\n TCP connect" << _tcp->state();
+        }        
 
     } else
     {
@@ -119,7 +119,7 @@ void GPSProvider::run()
         }
 
         if (gpsDriver->configure(baudrate, GPSDriverUBX::OutputMode::RTCM) == 0) {
-            qDebug() << "\n AAAA";
+            qDebug() << "\n Configured!";
 
             /* reset report */
             memset(&_reportGpsPos, 0, sizeof(_reportGpsPos));
@@ -130,7 +130,6 @@ void GPSProvider::run()
 
             while (!_requestStop && numTries < 3) {
                 int helperRet = gpsDriver->receive(GPS_RECEIVE_TIMEOUT);
-                qDebug() << "\n !result!" << helperRet;
                 if (helperRet > 0) {
                     numTries = 0;
 
@@ -230,7 +229,6 @@ int GPSProvider::callback(GPSCallbackType type, void *data1, int data2)
 {
     switch (type) {
         case GPSCallbackType::readDeviceData: {
-            //qDebug() << "\n GPSCallbackType::readDeviceDatd";
             QIODevice* ioDevice = nullptr;
             if (_isTCP)
             {
@@ -250,13 +248,11 @@ int GPSProvider::callback(GPSCallbackType type, void *data1, int data2)
                         return 0; //timeout
                 }
                 result = (int)ioDevice->read((char*) data1, data2);
-               // qDebug() << "\n read" << data1 << QString((char*) data1) << data2 << result;
             }
             return result;
         } break;
         case GPSCallbackType::writeDeviceData:
         {
-         //qDebug() << "\n GPSCallbackType::writeDeviceDatd";
             QIODevice* ioDevice = nullptr;
             if (_isTCP)
             {
@@ -267,7 +263,8 @@ int GPSProvider::callback(GPSCallbackType type, void *data1, int data2)
                 ioDevice = _serial;
                 #endif
             }
-            if (ioDevice && ioDevice->write((char*) data1, data2) >= 0) {
+            if (ioDevice && ioDevice->write((char*) data1, data2) >= 0)
+            {
                 if (ioDevice->waitForBytesWritten(-1))
                 {
                     return data2;
@@ -291,8 +288,7 @@ int GPSProvider::callback(GPSCallbackType type, void *data1, int data2)
 
             qCDebug(RTKGPSLog) << QString("Survey-in status: %1s cur accuracy: %2mm valid: %3 active: %4").arg(status->duration).arg(status->mean_accuracy).arg((int)(status->flags & 1)).arg((int)((status->flags>>1) & 1));
             emit surveyInStatus(status->duration, status->mean_accuracy, status->latitude, status->longitude, status->altitude, (int)(status->flags & 1), (int)((status->flags>>1) & 1));
-        }
-            break;
+        } break;
 
         case GPSCallbackType::setClock:
             /* do nothing */

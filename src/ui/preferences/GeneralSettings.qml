@@ -858,38 +858,6 @@ Rectangle {
                             property bool useFixedPosition: rtkSettings.useFixedBasePosition.rawValue
                             property real firstColWidth:    ScreenTools.defaultFontPixelWidth * 3
 
-                            FactCheckBox {
-                                text:                   rtkGrid.rtkSettings.useUDP.shortDescription
-                                fact:                   rtkGrid.rtkSettings.useUDP
-                                visible:                rtkGrid.rtkSettings.useUDP.visible
-                                Layout.columnSpan:      3
-                            }
-
-                            Item { width: rtkGrid.firstColWidth; height: 1 }
-
-                            QGCLabel {
-                                text:               rtkGrid.rtkSettings.udpPort.shortDescription
-                                visible:            rtkGrid.rtkSettings.udpPort.visible
-                                enabled:            rtkGrid.rtkSettings.useUDP.value === true
-                            }
-                            FactTextField {
-                                fact:               rtkGrid.rtkSettings.udpPort
-                                visible:            rtkGrid.rtkSettings.udpPort.visible
-                                enabled:            rtkGrid.rtkSettings.useUDP.value === true
-                                Layout.preferredWidth:  _valueFieldWidth
-                            }
-                            Item { width: rtkGrid.firstColWidth; height: 1 }
-
-                            QGCButton {
-                                text:               qsTr("Test Connection")
-                                Layout.fillWidth:   true
-                                enabled:            rtkGrid.rtkSettings.useUDP.value === true
-                                onClicked: {
-                                    print("\n rtkGrid.rtkSettings.testUDPConnection() ")
-                                    rtkGrid.rtkSettings.testUDPConnection()
-                                }
-                            }
-
                             QGCRadioButton {
                                 text:               qsTr("Perform Survey-In")
                                 visible:            rtkGrid.rtkSettings.useFixedBasePosition.visible
@@ -996,6 +964,56 @@ Rectangle {
                                     rtkGrid.rtkSettings.fixedBasePositionAccuracy.rawValue =    QGroundControl.gpsRtk.currentAccuracy.rawValue
                                 }
                             }
+
+                            Item { width: rtkGrid.firstColWidth; height: 1 }
+
+                            FactCheckBox {
+                                text:                   rtkGrid.rtkSettings.useTCP.shortDescription
+                                fact:                   rtkGrid.rtkSettings.useTCP
+                                visible:                rtkGrid.rtkSettings.useTCP.visible
+                                Layout.columnSpan:      3
+                            }
+
+                            Item { width: rtkGrid.firstColWidth; height: 1 }
+
+                            QGCLabel {
+                                text:               rtkGrid.rtkSettings.tcpHost.shortDescription
+                                visible:            rtkGrid.rtkSettings.tcpHost.visible
+                                enabled:            rtkGrid.rtkSettings.useTCP.value === true
+                            }
+                            FactTextField {
+                                fact:               rtkGrid.rtkSettings.tcpHost
+                                visible:            rtkGrid.rtkSettings.tcpHost.visible
+                                enabled:            rtkGrid.rtkSettings.useTCP.value === true
+                                Layout.preferredWidth:  _valueFieldWidth * 1.5
+                            }
+
+                            Item { width: rtkGrid.firstColWidth; height: 1 }
+
+                            QGCLabel {
+                                text:               rtkGrid.rtkSettings.tcpPort.shortDescription
+                                visible:            rtkGrid.rtkSettings.tcpPort.visible
+                                enabled:            rtkGrid.rtkSettings.useTCP.value === true
+                            }
+                            FactTextField {
+                                fact:               rtkGrid.rtkSettings.tcpPort
+                                visible:            rtkGrid.rtkSettings.tcpPort.visible
+                                enabled:            rtkGrid.rtkSettings.useTCP.value === true
+                                Layout.preferredWidth:  _valueFieldWidth * 1.5
+                            }
+                            Item { width: rtkGrid.firstColWidth; height: 1 }
+
+                            QGCButton {
+                                text:               rtkGrid.rtkSettings.tcpConnected.value === false ?
+                                                        qsTr("Connect") : qsTr("Disconnect")
+                                Layout.fillWidth:   true
+                                enabled:            rtkGrid.rtkSettings.useTCP.value === true
+                                onClicked: {
+                                    print("\n rtkGrid.rtkSettings.testTCPConnection() ")
+                                    rtkGrid.rtkSettings.onConnectBtnClicked()
+                                }
+                            }
+
                         }
                     }
 
