@@ -79,7 +79,7 @@ ColumnLayout {
                 minimumValue:   0
                 maximumValue:   255
                 height: 20
-                value: 255
+                value: 0
                 displayValue: true
                 onValueChanged: {
                     activeVehicle.setColor(redSlider.value, greenSlider.value, blueSlider.value)
@@ -92,7 +92,7 @@ ColumnLayout {
                 minimumValue:   0
                 maximumValue:   255
                 height: 20
-                value: 255
+                value: 0
                 displayValue: true
                 onValueChanged: {
                     activeVehicle.setColor(redSlider.value, greenSlider.value, blueSlider.value)
@@ -105,7 +105,7 @@ ColumnLayout {
                 minimumValue:   0
                 maximumValue:   255
                 height: 20
-                value: 255
+                value: 0
                 displayValue: true
                 onValueChanged: {
                     activeVehicle.setColor(redSlider.value, greenSlider.value, blueSlider.value)

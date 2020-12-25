@@ -27,32 +27,32 @@
 },
 {
     "name":                 "useTCP",
-    "shortDescription":     "Use TCP",
-    "longDescription":      "Use TCP to connect to RTK",
+    "shortDesc":     "Use TCP",
+    "longDesc":      "Use TCP to connect to RTK",
     "type":                 "bool",
-    "defaultValue":         false,
+    "default":         false,
     "qgcRebootRequired":    false
 },
 {
     "name":                 "tcpHost",
-    "shortDescription":     "Host adress",
+    "shortDesc":     "Host adress",
     "type":                 "string",
-    "defaultValue":         "192.168.202.150",
+    "default":         "192.168.202.150",
     "qgcRebootRequired":    false
 },
 {
     "name":                 "tcpPort",
-    "shortDescription":     "Port",
+    "shortDesc":     "Port",
     "type":                 "string",
-    "defaultValue":         "2323",
+    "default":         "2323",
     "qgcRebootRequired":    false
 },
 {
     "name":                 "tcpConnected",
-    "shortDescription":     "",
-    "longDescription":      "",
+    "shortDesc":     "",
+    "longDesc":      "",
     "type":                 "bool",
-    "defaultValue":         false,
+    "default":         false,
     "qgcRebootRequired":    false
 },
 {
