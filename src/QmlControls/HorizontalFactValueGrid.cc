@@ -14,17 +14,17 @@
 
 #include <QSettings>
 
-const QString HorizontalFactValueGrid::_toolbarUserSettingsGroup    ("ToolbarUserSettings2");
-const QString HorizontalFactValueGrid::toolbarDefaultSettingsGroup  ("ToolbarDefaultSettings2");
+const QString HorizontalFactValueGrid::telemetryBarUserSettingsGroup    ("TelemetryBarUserSettings");
+const QString HorizontalFactValueGrid::telemetryBarDefaultSettingsGroup ("TelemetryBarDefaultSettings");
 
 HorizontalFactValueGrid::HorizontalFactValueGrid(QQuickItem* parent)
     : FactValueGrid(parent)
 {
-    _orientation = HorizontalOrientation;
+
 }
 
 HorizontalFactValueGrid::HorizontalFactValueGrid(const QString& defaultSettingsGroup)
     : FactValueGrid(defaultSettingsGroup)
 {
-    _orientation = HorizontalOrientation;
+
 }

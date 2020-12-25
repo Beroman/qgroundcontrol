@@ -22,7 +22,6 @@
 #include <private/qobject_p.h>
 
 #include "LinkConfiguration.h"
-#include "LinkManager.h"
 #include "MAVLinkProtocol.h"
 #include "FlightMapSettings.h"
 #include "FirmwarePluginManager.h"
@@ -78,7 +77,7 @@ public:
     void reportMissingParameter(int componentId, const QString& name);
 
     /// Show non-modal vehicle message to the user
-    Q_SLOT void showVehicleMessage(const QString& message);
+    Q_SLOT void showCriticalVehicleMessage(const QString& message);
 
     /// Show modal application message to the user
     Q_SLOT void showAppMessage(const QString& message, const QString& title = QString());

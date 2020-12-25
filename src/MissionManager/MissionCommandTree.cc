@@ -81,12 +81,12 @@ void MissionCommandTree::_collapseHierarchy(const MissionCommandList*           
     }
 }
 
-void MissionCommandTree::_buildAllCommands(Vehicle* vehicle)
+void MissionCommandTree::_buildAllCommands(Vehicle* vehicle, QGCMAVLink::VehicleClass_t vtolMode)
 {
     QGCMAVLink::FirmwareClass_t firmwareClass;
     QGCMAVLink::VehicleClass_t  vehicleClass;
 
-    _firmwareAndVehicleClassInfo(vehicle, firmwareClass, vehicleClass);
+    _firmwareAndVehicleClassInfo(vehicle, vtolMode, firmwareClass, vehicleClass);
 
     if (_allCommands.contains(firmwareClass) && _allCommands[firmwareClass].contains(vehicleClass)) {
         // Already built
@@ -114,7 +114,7 @@ void MissionCommandTree::_buildAllCommands(Vehicle* vehicle)
     }
 
     // Build category list from supported commands
-    QList<MAV_CMD> supportedCommands = vehicle->firmwarePlugin()->supportedMissionCommands();
+    QList<MAV_CMD> supportedCommands = vehicle->firmwarePlugin()->supportedMissionCommands(vehicleClass);
     for (MAV_CMD cmd: collapsedTree.keys()) {
         if (supportedCommands.contains(cmd)) {
             QString newCategory = collapsedTree[cmd]->category();
@@ -131,8 +131,8 @@ QStringList MissionCommandTree::_availableCategoriesForVehicle(Vehicle* vehicle)
     QGCMAVLink::FirmwareClass_t firmwareClass;
     QGCMAVLink::VehicleClass_t  vehicleClass;
 
-    _firmwareAndVehicleClassInfo(vehicle, firmwareClass, vehicleClass);
-    _buildAllCommands(vehicle);
+    _firmwareAndVehicleClassInfo(vehicle, QGCMAVLink::VehicleClassGeneric, firmwareClass, vehicleClass);
+    _buildAllCommands(vehicle, QGCMAVLink::VehicleClassGeneric);
 
     return _supportedCategories[firmwareClass][vehicleClass];
 }
@@ -161,18 +161,34 @@ QString MissionCommandTree::rawName(MAV_CMD command)
     }
 }
 
+bool MissionCommandTree::isLandCommand(MAV_CMD command)
+{
+    MissionCommandList *    commandList =   _staticCommandTree[QGCMAVLink::FirmwareClassGeneric][QGCMAVLink::VehicleClassGeneric];
+    MissionCommandUIInfo*   uiInfo =        commandList->getUIInfo(command);
+
+    return uiInfo ? uiInfo->isLandCommand() : false;
+}
+
+bool MissionCommandTree::isTakeoffCommand(MAV_CMD command)
+{
+    MissionCommandList *    commandList =   _staticCommandTree[QGCMAVLink::FirmwareClassGeneric][QGCMAVLink::VehicleClassGeneric];
+    MissionCommandUIInfo*   uiInfo =        commandList->getUIInfo(command);
+
+    return uiInfo ? uiInfo->isTakeoffCommand() : false;
+}
+
 const QList<MAV_CMD>& MissionCommandTree::allCommandIds(void) const
 {
     return _staticCommandTree[QGCMAVLink::FirmwareClassGeneric][QGCMAVLink::VehicleClassGeneric]->commandIds();
 }
 
-const MissionCommandUIInfo* MissionCommandTree::getUIInfo(Vehicle* vehicle, MAV_CMD command)
+const MissionCommandUIInfo* MissionCommandTree::getUIInfo(Vehicle* vehicle, QGCMAVLink::VehicleClass_t vtolMode,  MAV_CMD command)
 {
     QGCMAVLink::FirmwareClass_t firmwareClass;
     QGCMAVLink::VehicleClass_t  vehicleClass;
 
-    _firmwareAndVehicleClassInfo(vehicle, firmwareClass, vehicleClass);
-    _buildAllCommands(vehicle);
+    _firmwareAndVehicleClassInfo(vehicle, vtolMode, firmwareClass, vehicleClass);
+    _buildAllCommands(vehicle, vtolMode);
 
     const QMap<MAV_CMD, MissionCommandUIInfo*>& infoMap = _allCommands[firmwareClass][vehicleClass];
     if (infoMap.contains(command)) {
@@ -187,21 +203,20 @@ QVariantList MissionCommandTree::getCommandsForCategory(Vehicle* vehicle, const 
     QGCMAVLink::FirmwareClass_t firmwareClass;
     QGCMAVLink::VehicleClass_t  vehicleClass;
 
-    _firmwareAndVehicleClassInfo(vehicle, firmwareClass, vehicleClass);
-    _buildAllCommands(vehicle);
+    _firmwareAndVehicleClassInfo(vehicle, QGCMAVLink::VehicleClassGeneric, firmwareClass, vehicleClass);
+    _buildAllCommands(vehicle, QGCMAVLink::VehicleClassGeneric);
 
     // vehicle can be null in which case _firmwareAndVehicleClassInfo will tell of the firmware/vehicle type for the offline editing vehicle.
     // We then use that to get a firmware plugin so we can get the list of supported commands.
     FirmwarePlugin* firmwarePlugin = qgcApp()->toolbox()->firmwarePluginManager()->firmwarePluginForAutopilot(QGCMAVLink::firmwareClassToAutopilot(firmwareClass), QGCMAVLink::vehicleClassToMavType(vehicleClass));
-    QList<MAV_CMD>  supportedCommands = firmwarePlugin->supportedMissionCommands();
+    QList<MAV_CMD>  supportedCommands = firmwarePlugin->supportedMissionCommands(vehicleClass);
 
     QVariantList list;
     QMap<MAV_CMD, MissionCommandUIInfo*> commandMap = _allCommands[firmwareClass][vehicleClass];
     for (MAV_CMD command: commandMap.keys()) {
-        if (supportedCommands.contains(command)) {
+        if (supportedCommands.isEmpty() || supportedCommands.contains(command)) {
             MissionCommandUIInfo* uiInfo = commandMap[command];
-            if ((uiInfo->category() == category || category == _allCommandsCategory) &&
-                    (showFlyThroughCommands || !uiInfo->specifiesCoordinate() || uiInfo->isStandaloneCoordinate())) {
+            if ((uiInfo->category() == category || category == _allCommandsCategory) && (showFlyThroughCommands || !uiInfo->specifiesCoordinate() || uiInfo->isStandaloneCoordinate())) {
                 list.append(QVariant::fromValue(uiInfo));
             }
         }
@@ -210,8 +225,11 @@ QVariantList MissionCommandTree::getCommandsForCategory(Vehicle* vehicle, const 
     return list;
 }
 
-void MissionCommandTree::_firmwareAndVehicleClassInfo(Vehicle* vehicle, QGCMAVLink::FirmwareClass_t& firmwareClass, QGCMAVLink::VehicleClass_t& vehicleClass) const
+void MissionCommandTree::_firmwareAndVehicleClassInfo(Vehicle* vehicle, QGCMAVLink::VehicleClass_t vtolMode, QGCMAVLink::FirmwareClass_t& firmwareClass, QGCMAVLink::VehicleClass_t& vehicleClass) const
 {
     firmwareClass = QGCMAVLink::firmwareClass(vehicle->firmwareType());
     vehicleClass = QGCMAVLink::vehicleClass(vehicle->vehicleType());
+    if (vehicleClass == QGCMAVLink::VehicleClassVTOL && vtolMode != QGCMAVLink::VehicleClassGeneric) {
+        vehicleClass = vtolMode;
+    }
 }

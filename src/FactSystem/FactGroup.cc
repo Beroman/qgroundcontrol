@@ -18,8 +18,6 @@
 #include <QFile>
 #include <QQmlEngine>
 
-QGC_LOGGING_CATEGORY(FactGroupLog, "FactGroupLog")
-
 FactGroup::FactGroup(int updateRateMsecs, const QString& metaDataFile, QObject* parent, bool ignoreCamelCase)
     : QObject(parent)
     , _updateRateMSecs(updateRateMsecs)
@@ -27,6 +25,7 @@ FactGroup::FactGroup(int updateRateMsecs, const QString& metaDataFile, QObject* 
 {
     _setupTimer();
     _nameToFactMetaDataMap = FactMetaData::createMapFromJsonFile(metaDataFile, this);
+    QQmlEngine::setObjectOwnership(this, QQmlEngine::CppOwnership);
 }
 
 FactGroup::FactGroup(int updateRateMsecs, QObject* parent, bool ignoreCamelCase)
@@ -35,6 +34,7 @@ FactGroup::FactGroup(int updateRateMsecs, QObject* parent, bool ignoreCamelCase)
     , _ignoreCamelCase(ignoreCamelCase)
 {
     _setupTimer();
+    QQmlEngine::setObjectOwnership(this, QQmlEngine::CppOwnership);
 }
 
 void FactGroup::_loadFromJsonArray(const QJsonArray jsonArray)
@@ -51,6 +51,29 @@ void FactGroup::_setupTimer()
         _updateTimer.setInterval(_updateRateMSecs);
         _updateTimer.start();
     }
+}
+
+bool FactGroup::factExists(const QString& name)
+{
+    if (name.contains(".")) {
+        QStringList parts = name.split(".");
+        if (parts.count() != 2) {
+            qWarning() << "Only single level of hierarchy supported";
+            return false;
+        }
+
+        FactGroup * factGroup = getFactGroup(parts[0]);
+        if (!factGroup) {
+            qWarning() << "Unknown FactGroup" << parts[0];
+            return false;
+        }
+
+        return factGroup->factExists(parts[1]);
+    }
+
+    QString camelCaseName = _ignoreCamelCase ? name : _camelCase(name);
+
+    return _nameToFactMap.contains(camelCaseName);
 }
 
 Fact* FactGroup::getFact(const QString& name)
@@ -108,10 +131,12 @@ void FactGroup::_addFact(Fact* fact, const QString& name)
 
     fact->setSendValueChangedSignals(_updateRateMSecs == 0);
     if (_nameToFactMetaDataMap.contains(name)) {
-        fact->setMetaData(_nameToFactMetaDataMap[name]);
+        fact->setMetaData(_nameToFactMetaDataMap[name], true /* setDefaultFromMetaData */);
     }
     _nameToFactMap[name] = fact;
     _factNames.append(name);
+
+    emit factNamesChanged();
 }
 
 void FactGroup::_addFactGroup(FactGroup* factGroup, const QString& name)
@@ -122,6 +147,8 @@ void FactGroup::_addFactGroup(FactGroup* factGroup, const QString& name)
     }
 
     _nameToFactGroupMap[name] = factGroup;
+
+    emit factGroupNamesChanged();
 }
 
 void FactGroup::_updateAllValues(void)
@@ -151,4 +178,17 @@ void FactGroup::setLiveUpdates(bool liveUpdates)
 QString FactGroup::_camelCase(const QString& text)
 {
     return text[0].toLower() + text.right(text.length() - 1);
+}
+
+void FactGroup::handleMessage(Vehicle* /* vehicle */, mavlink_message_t& /* message */)
+{
+    // Default implementation does nothing
+}
+
+void FactGroup::_setTelemetryAvailable (bool telemetryAvailable)
+{
+    if (telemetryAvailable != _telemetryAvailable) {
+        _telemetryAvailable = telemetryAvailable;
+        emit telemetryAvailableChanged(_telemetryAvailable);
+    }
 }

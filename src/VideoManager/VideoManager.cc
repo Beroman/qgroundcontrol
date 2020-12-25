@@ -30,6 +30,7 @@
 
 #if defined(QGC_GST_STREAMING)
 #include "GStreamer.h"
+#include "VideoSettings.h"
 #else
 #include "GLVideoItemStub.h"
 #endif
@@ -104,6 +105,11 @@ VideoManager::setToolbox(QGCToolbox *toolbox)
    connect(pVehicleMgr, &MultiVehicleManager::activeVehicleChanged, this, &VideoManager::_setActiveVehicle);
 
 #if defined(QGC_GST_STREAMING)
+    bool forceSoftware = _videoSettings->forceVideoDecoder()->rawValue() == VideoSettings::VideoDecoderOptions::ForceVideoDecoderSoftware;
+    bool forceNVIDIA = _videoSettings->forceVideoDecoder()->rawValue() == VideoSettings::VideoDecoderOptions::ForceVideoDecoderNVIDIA;
+    bool forceVAAPI = _videoSettings->forceVideoDecoder()->rawValue() == VideoSettings::VideoDecoderOptions::ForceVideoDecoderVAAPI;
+    bool forceD3D11 = _videoSettings->forceVideoDecoder()->rawValue() == VideoSettings::VideoDecoderOptions::ForceVideoDecoderDirectX3D;
+    GStreamer::blacklist(forceSoftware, forceVAAPI, forceNVIDIA, forceD3D11);
 #ifndef QGC_DISABLE_UVC
    // If we are using a UVC camera setup the device name
    _updateUVC();
@@ -350,7 +356,12 @@ VideoManager::grabImage(const QString& imageFile)
         return;
     }
 
-    _imageFile = imageFile;
+    if (imageFile.isEmpty()) {
+        _imageFile = qgcApp()->toolbox()->settingsManager()->appSettings()->photoSavePath();
+        _imageFile += + "/" + QDateTime::currentDateTime().toString("yyyy-MM-dd_hh.mm.ss.zzz") + ".jpg";
+    } else {
+        _imageFile = imageFile;
+    }
 
     emit imageFileChanged();
 
@@ -363,8 +374,8 @@ VideoManager::grabImage(const QString& imageFile)
 //-----------------------------------------------------------------------------
 double VideoManager::aspectRatio()
 {
-    if(_activeVehicle && _activeVehicle->dynamicCameras()) {
-        QGCVideoStreamInfo* pInfo = _activeVehicle->dynamicCameras()->currentStreamInstance();
+    if(_activeVehicle && _activeVehicle->cameraManager()) {
+        QGCVideoStreamInfo* pInfo = _activeVehicle->cameraManager()->currentStreamInstance();
         if(pInfo) {
             qCDebug(VideoManagerLog) << "Primary AR: " << pInfo->aspectRatio();
             return pInfo->aspectRatio();
@@ -377,8 +388,8 @@ double VideoManager::aspectRatio()
 //-----------------------------------------------------------------------------
 double VideoManager::thermalAspectRatio()
 {
-    if(_activeVehicle && _activeVehicle->dynamicCameras()) {
-        QGCVideoStreamInfo* pInfo = _activeVehicle->dynamicCameras()->thermalStreamInstance();
+    if(_activeVehicle && _activeVehicle->cameraManager()) {
+        QGCVideoStreamInfo* pInfo = _activeVehicle->cameraManager()->thermalStreamInstance();
         if(pInfo) {
             qCDebug(VideoManagerLog) << "Thermal AR: " << pInfo->aspectRatio();
             return pInfo->aspectRatio();
@@ -390,8 +401,8 @@ double VideoManager::thermalAspectRatio()
 //-----------------------------------------------------------------------------
 double VideoManager::hfov()
 {
-    if(_activeVehicle && _activeVehicle->dynamicCameras()) {
-        QGCVideoStreamInfo* pInfo = _activeVehicle->dynamicCameras()->currentStreamInstance();
+    if(_activeVehicle && _activeVehicle->cameraManager()) {
+        QGCVideoStreamInfo* pInfo = _activeVehicle->cameraManager()->currentStreamInstance();
         if(pInfo) {
             return pInfo->hfov();
         }
@@ -402,8 +413,8 @@ double VideoManager::hfov()
 //-----------------------------------------------------------------------------
 double VideoManager::thermalHfov()
 {
-    if(_activeVehicle && _activeVehicle->dynamicCameras()) {
-        QGCVideoStreamInfo* pInfo = _activeVehicle->dynamicCameras()->thermalStreamInstance();
+    if(_activeVehicle && _activeVehicle->cameraManager()) {
+        QGCVideoStreamInfo* pInfo = _activeVehicle->cameraManager()->thermalStreamInstance();
         if(pInfo) {
             return pInfo->aspectRatio();
         }
@@ -415,8 +426,8 @@ double VideoManager::thermalHfov()
 bool
 VideoManager::hasThermal()
 {
-    if(_activeVehicle && _activeVehicle->dynamicCameras()) {
-        QGCVideoStreamInfo* pInfo = _activeVehicle->dynamicCameras()->thermalStreamInstance();
+    if(_activeVehicle && _activeVehicle->cameraManager()) {
+        QGCVideoStreamInfo* pInfo = _activeVehicle->cameraManager()->thermalStreamInstance();
         if(pInfo) {
             return true;
         }
@@ -436,8 +447,8 @@ bool
 VideoManager::autoStreamConfigured()
 {
 #if defined(QGC_GST_STREAMING)
-    if(_activeVehicle && _activeVehicle->dynamicCameras()) {
-        QGCVideoStreamInfo* pInfo = _activeVehicle->dynamicCameras()->currentStreamInstance();
+    if(_activeVehicle && _activeVehicle->cameraManager()) {
+        QGCVideoStreamInfo* pInfo = _activeVehicle->cameraManager()->currentStreamInstance();
         if(pInfo) {
             return !pInfo->uri().isEmpty();
         }
@@ -520,13 +531,14 @@ VideoManager::isGStreamer()
 {
 #if defined(QGC_GST_STREAMING)
     QString videoSource = _videoSettings->videoSource()->rawValue().toString();
-    return
-        videoSource == VideoSettings::videoSourceUDPH264 ||
-        videoSource == VideoSettings::videoSourceUDPH265 ||
-        videoSource == VideoSettings::videoSourceRTSP ||
-        videoSource == VideoSettings::videoSourceTCP ||
-        videoSource == VideoSettings::videoSourceMPEGTS ||
-        autoStreamConfigured();
+    return videoSource == VideoSettings::videoSourceUDPH264 ||
+            videoSource == VideoSettings::videoSourceUDPH265 ||
+            videoSource == VideoSettings::videoSourceRTSP ||
+            videoSource == VideoSettings::videoSourceTCP ||
+            videoSource == VideoSettings::videoSourceMPEGTS ||
+            videoSource == VideoSettings::videoSource3DRSolo ||
+            videoSource == VideoSettings::videoSourceParrotDiscovery ||
+            autoStreamConfigured();
 #else
     return false;
 #endif
@@ -547,7 +559,7 @@ VideoManager::setfullScreen(bool f)
 {
     if(f) {
         //-- No can do if no vehicle or connection lost
-        if(!_activeVehicle || _activeVehicle->connectionLost()) {
+        if(!_activeVehicle || _activeVehicle->vehicleLinkManager()->communicationLost()) {
             f = false;
         }
     }
@@ -614,8 +626,8 @@ VideoManager::_updateSettings(unsigned id)
 
     //-- Auto discovery
 
-    if(_activeVehicle && _activeVehicle->dynamicCameras()) {
-        QGCVideoStreamInfo* pInfo = _activeVehicle->dynamicCameras()->currentStreamInstance();
+    if(_activeVehicle && _activeVehicle->cameraManager()) {
+        QGCVideoStreamInfo* pInfo = _activeVehicle->cameraManager()->currentStreamInstance();
         if(pInfo) {
             if (id == 0) {
                 qCDebug(VideoManagerLog) << "Configure primary stream:" << pInfo->uri();
@@ -646,7 +658,7 @@ VideoManager::_updateSettings(unsigned id)
                 }
             }
             else if (id == 1) { //-- Thermal stream (if any)
-                QGCVideoStreamInfo* pTinfo = _activeVehicle->dynamicCameras()->thermalStreamInstance();
+                QGCVideoStreamInfo* pTinfo = _activeVehicle->cameraManager()->thermalStreamInstance();
                 if (pTinfo) {
                     qCDebug(VideoManagerLog) << "Configure secondary stream:" << pTinfo->uri();
                     switch(pTinfo->type()) {
@@ -680,6 +692,10 @@ VideoManager::_updateSettings(unsigned id)
         settingsChanged |= _updateVideoUri(0, _videoSettings->rtspUrl()->rawValue().toString());
     else if (source == VideoSettings::videoSourceTCP)
         settingsChanged |= _updateVideoUri(0, QStringLiteral("tcp://%1").arg(_videoSettings->tcpUrl()->rawValue().toString()));
+    else if (source == VideoSettings::videoSource3DRSolo)
+        settingsChanged |= _updateVideoUri(0, QStringLiteral("udp://0.0.0.0:5600"));
+    else if (source == VideoSettings::videoSourceParrotDiscovery)
+        settingsChanged |= _updateVideoUri(0, QStringLiteral("udp://0.0.0.0:8888"));
 
     return settingsChanged;
 }
@@ -787,21 +803,21 @@ void
 VideoManager::_setActiveVehicle(Vehicle* vehicle)
 {
     if(_activeVehicle) {
-        disconnect(_activeVehicle, &Vehicle::connectionLostChanged, this, &VideoManager::_connectionLostChanged);
-        if(_activeVehicle->dynamicCameras()) {
-            QGCCameraControl* pCamera = _activeVehicle->dynamicCameras()->currentCameraInstance();
+        disconnect(_activeVehicle->vehicleLinkManager(), &VehicleLinkManager::communicationLostChanged, this, &VideoManager::_communicationLostChanged);
+        if(_activeVehicle->cameraManager()) {
+            QGCCameraControl* pCamera = _activeVehicle->cameraManager()->currentCameraInstance();
             if(pCamera) {
                 pCamera->stopStream();
             }
-            disconnect(_activeVehicle->dynamicCameras(), &QGCCameraManager::streamChanged, this, &VideoManager::_restartAllVideos);
+            disconnect(_activeVehicle->cameraManager(), &QGCCameraManager::streamChanged, this, &VideoManager::_restartAllVideos);
         }
     }
     _activeVehicle = vehicle;
     if(_activeVehicle) {
-        connect(_activeVehicle, &Vehicle::connectionLostChanged, this, &VideoManager::_connectionLostChanged);
-        if(_activeVehicle->dynamicCameras()) {
-            connect(_activeVehicle->dynamicCameras(), &QGCCameraManager::streamChanged, this, &VideoManager::_restartAllVideos);
-            QGCCameraControl* pCamera = _activeVehicle->dynamicCameras()->currentCameraInstance();
+        connect(_activeVehicle->vehicleLinkManager(), &VehicleLinkManager::communicationLostChanged, this, &VideoManager::_communicationLostChanged);
+        if(_activeVehicle->cameraManager()) {
+            connect(_activeVehicle->cameraManager(), &QGCCameraManager::streamChanged, this, &VideoManager::_restartAllVideos);
+            QGCCameraControl* pCamera = _activeVehicle->cameraManager()->currentCameraInstance();
             if(pCamera) {
                 pCamera->resumeStream();
             }
@@ -816,7 +832,7 @@ VideoManager::_setActiveVehicle(Vehicle* vehicle)
 
 //----------------------------------------------------------------------------------------
 void
-VideoManager::_connectionLostChanged(bool connectionLost)
+VideoManager::_communicationLostChanged(bool connectionLost)
 {
     if(connectionLost) {
         //-- Disable full screen video if connection is lost

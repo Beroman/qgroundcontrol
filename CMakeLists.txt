@@ -13,7 +13,7 @@ set(CMAKE_INCLUDE_CURRENT_DIR ON)
 include(FeatureSummary)
 
 if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang" OR "${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
-	add_compile_options(-Wall -Wextra -Wno-address-of-packed-member)
+        add_compile_options(-Wall -Wextra)
 endif()
 
 # CMake build type
@@ -163,8 +163,6 @@ add_subdirectory(libs)
 add_subdirectory(src)
 
 set(QGC_RESOURCES
-	#HackAndroidFileDialog.qrc
-	HackFileDialog.qrc
 	qgcresources.qrc
 	qgroundcontrol.qrc
 	qgcimages.qrc

@@ -64,8 +64,8 @@ QGC_APP_DESCRIPTION = "Open source ground control app provided by QGroundControl
 QGC_APP_COPYRIGHT   = "Copyright (C) 2019 QGroundControl Development Team. All rights reserved."
 
 WindowsBuild {
-    QGC_INSTALLER_ICON          = "$$SOURCE_DIR\\WindowsQGC.ico"
-    QGC_INSTALLER_HEADER_BITMAP = "$$SOURCE_DIR\\installheader.bmp"
+    QGC_INSTALLER_ICON          = "$$SOURCE_DIR\\windows\\WindowsQGC.ico"
+    QGC_INSTALLER_HEADER_BITMAP = "$$SOURCE_DIR\\windows\\installheader.bmp"
 }
 
 # Load additional config flags from user_config.pri
@@ -267,7 +267,6 @@ AndroidBuild || iOSBuild {
     # Android and iOS don't unclude these
 } else {
     QT += \
-        printsupport \
         serialport \
 }
 
@@ -349,6 +348,12 @@ CustomBuild {
     } else {
         RESOURCES += $$PWD/qgcimages.qrc
     }
+    exists($$PWD/custom/InstrumentValueIcons.qrc) {
+        message("Using custom InstrumentValueIcons.qrc")
+        RESOURCES += $$PWD/custom/InstrumentValueIcons.qrc
+    } else {
+        RESOURCES += $$PWD/resources/InstrumentValueIcons/InstrumentValueIcons.qrc
+    }
 } else {
     DEFINES += QGC_APPLICATION_NAME=\"\\\"QGroundControl\\\"\"
     DEFINES += QGC_ORG_NAME=\"\\\"QGroundControl.org\\\"\"
@@ -358,15 +363,6 @@ CustomBuild {
         $$PWD/qgcresources.qrc \
         $$PWD/qgcimages.qrc \
         $$PWD/resources/InstrumentValueIcons/InstrumentValueIcons.qrc \
-}
-
-# On Qt 5.9 android versions there is the following bug: https://bugreports.qt.io/browse/QTBUG-61424
-# This prevents FileDialog from being used. So we have a temp hack workaround for it which just no-ops
-# the FileDialog fallback mechanism on android 5.9 builds.
-equals(QT_MAJOR_VERSION, 5):equals(QT_MINOR_VERSION, 9):AndroidBuild {
-    RESOURCES += $$PWD/HackAndroidFileDialog.qrc
-} else {
-    RESOURCES += $$PWD/HackFileDialog.qrc
 }
 
 #
@@ -408,7 +404,6 @@ INCLUDEPATH += \
     src/Settings \
     src/Terrain \
     src/Vehicle \
-    src/ViewWidgets \
     src/Audio \
     src/comm \
     src/input \
@@ -434,11 +429,11 @@ contains (DEFINES, QGC_ENABLE_PAIRING) {
 
 HEADERS += \
     src/QmlControls/QmlUnitsConversion.h \
+    src/Vehicle/VehicleEscStatusFactGroup.h \
     src/api/QGCCorePlugin.h \
     src/api/QGCOptions.h \
     src/api/QGCSettings.h \
     src/api/QmlComponentInfo.h \
-    src/comm/MavlinkMessagesTimer.h \
     src/GPS/Drivers/src/base_station.h \
 
 contains (DEFINES, QGC_ENABLE_PAIRING) {
@@ -447,11 +442,11 @@ contains (DEFINES, QGC_ENABLE_PAIRING) {
 }
 
 SOURCES += \
+    src/Vehicle/VehicleEscStatusFactGroup.cc \
     src/api/QGCCorePlugin.cc \
     src/api/QGCOptions.cc \
     src/api/QGCSettings.cc \
     src/api/QmlComponentInfo.cc \
-    src/comm/MavlinkMessagesTimer.cc \
 
 contains (DEFINES, QGC_ENABLE_PAIRING) {
     SOURCES += \
@@ -478,6 +473,7 @@ DebugBuild { PX4FirmwarePlugin { PX4FirmwarePluginFactory { APMFirmwarePlugin { 
         src/MissionManager/CameraSectionTest.h \
         src/MissionManager/CorridorScanComplexItemTest.h \
         src/MissionManager/FWLandingPatternTest.h \
+        src/MissionManager/LandingComplexItemTest.h \
         src/MissionManager/MissionCommandTreeEditorTest.h \
         src/MissionManager/MissionCommandTreeTest.h \
         src/MissionManager/MissionControllerManagerTest.h \
@@ -497,17 +493,15 @@ DebugBuild { PX4FirmwarePlugin { PX4FirmwarePluginFactory { APMFirmwarePlugin { 
         src/MissionManager/TransectStyleComplexItemTestBase.h \
         src/MissionManager/VisualMissionItemTest.h \
         src/qgcunittest/GeoTest.h \
-        src/qgcunittest/LinkManagerTest.h \
         src/qgcunittest/MavlinkLogTest.h \
         src/qgcunittest/MultiSignalSpy.h \
-        src/qgcunittest/TCPLinkTest.h \
-        src/qgcunittest/TCPLoopBackServer.h \
+        src/qgcunittest/MultiSignalSpyV2.h \
         src/qgcunittest/UnitTest.h \
         src/Vehicle/FTPManagerTest.h \
-        src/Vehicle/InitialConnectTest.h \
         src/Vehicle/RequestMessageTest.h \
         src/Vehicle/SendMavCommandWithHandlerTest.h \
         src/Vehicle/SendMavCommandWithSignallingTest.h \
+        src/Vehicle/VehicleLinkManagerTest.h \
         #src/qgcunittest/RadioConfigTest.h \
         #src/AnalyzeView/LogDownloadTest.h \
         #src/qgcunittest/FileDialogTest.h \
@@ -525,6 +519,7 @@ DebugBuild { PX4FirmwarePlugin { PX4FirmwarePluginFactory { APMFirmwarePlugin { 
         src/MissionManager/CameraSectionTest.cc \
         src/MissionManager/CorridorScanComplexItemTest.cc \
         src/MissionManager/FWLandingPatternTest.cc \
+        src/MissionManager/LandingComplexItemTest.cc \
         src/MissionManager/MissionCommandTreeEditorTest.cc \
         src/MissionManager/MissionCommandTreeTest.cc \
         src/MissionManager/MissionControllerManagerTest.cc \
@@ -544,18 +539,16 @@ DebugBuild { PX4FirmwarePlugin { PX4FirmwarePluginFactory { APMFirmwarePlugin { 
         src/MissionManager/TransectStyleComplexItemTestBase.cc \
         src/MissionManager/VisualMissionItemTest.cc \
         src/qgcunittest/GeoTest.cc \
-        src/qgcunittest/LinkManagerTest.cc \
         src/qgcunittest/MavlinkLogTest.cc \
         src/qgcunittest/MultiSignalSpy.cc \
-        src/qgcunittest/TCPLinkTest.cc \
-        src/qgcunittest/TCPLoopBackServer.cc \
+        src/qgcunittest/MultiSignalSpyV2.cc \
         src/qgcunittest/UnitTest.cc \
         src/qgcunittest/UnitTestList.cc \
         src/Vehicle/FTPManagerTest.cc \
-        src/Vehicle/InitialConnectTest.cc \
         src/Vehicle/RequestMessageTest.cc \
         src/Vehicle/SendMavCommandWithHandlerTest.cc \
         src/Vehicle/SendMavCommandWithSignallingTest.cc \
+        src/Vehicle/VehicleLinkManagerTest.cc \
         #src/qgcunittest/RadioConfigTest.cc \
         #src/AnalyzeView/LogDownloadTest.cc \
         #src/qgcunittest/FileDialogTest.cc \
@@ -669,7 +662,6 @@ HEADERS += \
     src/QmlControls/TerrainProfile.h \
     src/QmlControls/ToolStripAction.h \
     src/QmlControls/ToolStripActionList.h \
-    src/QmlControls/VerticalFactValueGrid.h \
     src/QtLocationPlugin/QMLControl/QGCMapEngineManager.h \
     src/Settings/ADSBVehicleManagerSettings.h \
     src/Settings/AppSettings.h \
@@ -699,11 +691,22 @@ HEADERS += \
     src/Vehicle/MAVLinkLogManager.h \
     src/Vehicle/MultiVehicleManager.h \
     src/Vehicle/StateMachine.h \
+    src/Vehicle/SysStatusSensorInfo.h \
     src/Vehicle/TerrainFactGroup.h \
     src/Vehicle/TerrainProtocolHandler.h \
     src/Vehicle/TrajectoryPoints.h \
     src/Vehicle/Vehicle.h \
     src/Vehicle/VehicleObjectAvoidance.h \
+    src/Vehicle/VehicleBatteryFactGroup.h \
+    src/Vehicle/VehicleClockFactGroup.h \
+    src/Vehicle/VehicleDistanceSensorFactGroup.h \
+    src/Vehicle/VehicleEstimatorStatusFactGroup.h \
+    src/Vehicle/VehicleGPSFactGroup.h \
+    src/Vehicle/VehicleLinkManager.h \
+    src/Vehicle/VehicleSetpointFactGroup.h \
+    src/Vehicle/VehicleTemperatureFactGroup.h \
+    src/Vehicle/VehicleVibrationFactGroup.h \
+    src/Vehicle/VehicleWindFactGroup.h \
     src/VehicleSetup/JoystickConfigController.h \
     src/comm/LinkConfiguration.h \
     src/comm/LinkInterface.h \
@@ -891,7 +894,6 @@ SOURCES += \
     src/QmlControls/TerrainProfile.cc \
     src/QmlControls/ToolStripAction.cc \
     src/QmlControls/ToolStripActionList.cc \
-    src/QmlControls/VerticalFactValueGrid.cc \
     src/QtLocationPlugin/QMLControl/QGCMapEngineManager.cc \
     src/Settings/ADSBVehicleManagerSettings.cc \
     src/Settings/AppSettings.cc \
@@ -921,11 +923,22 @@ SOURCES += \
     src/Vehicle/MAVLinkLogManager.cc \
     src/Vehicle/MultiVehicleManager.cc \
     src/Vehicle/StateMachine.cc \
+    src/Vehicle/SysStatusSensorInfo.cc \
     src/Vehicle/TerrainFactGroup.cc \
     src/Vehicle/TerrainProtocolHandler.cc \
     src/Vehicle/TrajectoryPoints.cc \
     src/Vehicle/Vehicle.cc \
     src/Vehicle/VehicleObjectAvoidance.cc \
+    src/Vehicle/VehicleBatteryFactGroup.cc \
+    src/Vehicle/VehicleClockFactGroup.cc \
+    src/Vehicle/VehicleDistanceSensorFactGroup.cc \
+    src/Vehicle/VehicleEstimatorStatusFactGroup.cc \
+    src/Vehicle/VehicleGPSFactGroup.cc \
+    src/Vehicle/VehicleLinkManager.cc \
+    src/Vehicle/VehicleSetpointFactGroup.cc \
+    src/Vehicle/VehicleTemperatureFactGroup.cc \
+    src/Vehicle/VehicleVibrationFactGroup.cc \
+    src/Vehicle/VehicleWindFactGroup.cc \
     src/VehicleSetup/JoystickConfigController.cc \
     src/comm/LinkConfiguration.cc \
     src/comm/LinkInterface.cc \
@@ -1408,7 +1421,7 @@ AndroidBuild {
 # Localization
 #
 
-TRANSLATIONS += $$files($$PWD/localization/qgc_*.ts)
+TRANSLATIONS += $$files($$PWD/translations/qgc_*.ts)
 CONFIG+=lrelease embed_translations
 
 #-------------------------------------------------------------------------------------

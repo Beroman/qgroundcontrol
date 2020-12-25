@@ -7,12 +7,6 @@
  *
  ****************************************************************************/
 
-
-/// @file
-///     @brief Base class for all unit tests
-///
-///     @author Don Gagne <don@thegagnes.com>
-
 #ifndef __mobile__
 #pragma once
 
@@ -27,7 +21,7 @@
 #include "MissionItem.h"
 
 #define UT_REGISTER_TEST(className)             static UnitTestWrapper<className> className(#className, false);
-#define UT_REGISTER_TEST_STANDALONE(className)  static UnitTestWrapper<className> className(#className, true);
+#define UT_REGISTER_TEST_STANDALONE(className)  static UnitTestWrapper<className> className(#className, true);  // Test will only be run with specifically called to from command line
 
 class QGCMessageBox;
 class QGCQFileDialog;
@@ -96,13 +90,11 @@ public:
     /// @return true: files are alike, false: files differ
     static bool fileCompare(const QString& file1, const QString& file2);
 
-    /// Fuzzy compare on two doubles, where NaN is a possible value
-    /// @return true: equal
-    static bool doubleNaNCompare(double value1, double value2);
-
     /// Changes the Facts rawValue such that it emits a valueChanged signal.
     ///     @param increment 0 use standard increment, other increment by specified amount if double value
     void changeFactValue(Fact* fact, double increment = 0);
+
+    QGeoCoordinate changeCoordinateValue(const QGeoCoordinate& coordinate);
 
     /// Returns true is the position of the two coordinates is less then a meter from each other.
     /// Does not check altitude.

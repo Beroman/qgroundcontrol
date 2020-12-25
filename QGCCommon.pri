@@ -31,6 +31,7 @@ linux {
             message("Linux clang")
             QMAKE_CXXFLAGS += -Qunused-arguments -fcolor-diagnostics
         } else {
+            #QMAKE_CXXFLAGS += -H # Handy for debugging why something is getting built when an include file is touched
             QMAKE_CXXFLAGS_WARN_ON += -Werror \
                 -Wno-deprecated-copy \      # These come from mavlink headers
                 -Wno-unused-parameter \     # gst_plugins-good has these errors
@@ -56,7 +57,6 @@ linux {
             -Wno-parentheses-equality           # android gstreamer header files
         QMAKE_CFLAGS_WARN_ON += \
             -Wno-unused-command-line-argument   # from somewhere in Qt generated build files
-        QMAKE_LINK += -nostdlib++ # Hack fix?: https://forum.qt.io/topic/103713/error-cannot-find-lc-qt-5-12-android
         target.path = $$DESTDIR
         equals(ANDROID_TARGET_ARCH, armeabi-v7a)  {
             DEFINES += __androidArm32__
@@ -113,8 +113,6 @@ linux {
         } else {
                 QMAKE_MACOSX_DEPLOYMENT_TARGET = 10.6
         }
-        #-- Not forcing anything. Let qmake find the latest, installed SDK.
-        QMAKE_MAC_SDK = macosx10.15
         QMAKE_CXXFLAGS += -fvisibility=hidden
         QMAKE_CXXFLAGS_WARN_ON += -Werror \
             -Wno-unused-parameter           # gst-plugins-good
@@ -232,13 +230,6 @@ CONFIG(debug, debug|release) {
 # Setup our build directories
 
 SOURCE_DIR = $$IN_PWD
-
-!iOSBuild {
-    OBJECTS_DIR  = $${OUT_PWD}/obj
-    MOC_DIR      = $${OUT_PWD}/moc
-    UI_DIR       = $${OUT_PWD}/ui
-    RCC_DIR      = $${OUT_PWD}/rcc
-}
 
 LANGUAGE = C++
 

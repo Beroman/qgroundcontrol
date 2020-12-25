@@ -46,7 +46,6 @@ Item {
     property var    _rallyPointController:              _planMasterController.rallyPointController
     property var    _visualItems:                       _missionController.visualItems
     property bool   _lightWidgetBorders:                editorMap.isSatelliteMap
-    property bool   _addWaypointOnClick:                false
     property bool   _addROIOnClick:                     false
     property bool   _singleComplexItem:                 _missionController.complexMissionItemNames.length === 1
     property int    _editingLayer:                      layerTabBar.currentIndex ? _layers[layerTabBar.currentIndex] : _layerMission
@@ -218,7 +217,7 @@ Item {
         Component.onCompleted: {
             _planMasterController.start()
             _missionController.setCurrentPlanViewSeqNum(0, true)
-            mainWindow.planMasterControllerPlanView = _planMasterController
+            globals.planMasterControllerPlanView = _planMasterController
         }
 
         onPromptForPlanUsageOnVehicleChange: {
@@ -271,8 +270,6 @@ Item {
             fileDialog.planFiles =      true
             fileDialog.selectExisting = true
             fileDialog.nameFilters =    _planMasterController.loadNameFilters
-            fileDialog.fileExtension =  _appSettings.planFileExtension
-            fileDialog.fileExtension2 = _appSettings.missionFileExtension
             fileDialog.openForLoad()
         }
 
@@ -284,8 +281,6 @@ Item {
             fileDialog.planFiles =      true
             fileDialog.selectExisting = false
             fileDialog.nameFilters =    _planMasterController.saveNameFilters
-            fileDialog.fileExtension =  _appSettings.planFileExtension
-            fileDialog.fileExtension2 = _appSettings.missionFileExtension
             fileDialog.openForSave()
         }
 
@@ -301,8 +296,6 @@ Item {
             fileDialog.planFiles =      false
             fileDialog.selectExisting = false
             fileDialog.nameFilters =    ShapeFileHelper.fileDialogKMLFilters
-            fileDialog.fileExtension =  _appSettings.kmlFileExtension
-            fileDialog.fileExtension2 = ""
             fileDialog.openForSave()
         }
     }
@@ -465,7 +458,7 @@ Item {
 
                     switch (_editingLayer) {
                     case _layerMission:
-                        if (_addWaypointOnClick) {
+                        if (addWaypointRallyPointAction.checked) {
                             insertSimpleItemAfterCurrent(coordinate)
                         } else if (_addROIOnClick) {
                             insertROIAfterCurrent(coordinate)
@@ -474,7 +467,7 @@ Item {
 
                         break
                     case _layerRallyPoints:
-                        if (_rallyPointController.supported && _addWaypointOnClick) {
+                        if (_rallyPointController.supported && addWaypointRallyPointAction.checked) {
                             _rallyPointController.addPoint(coordinate)
                         }
                         break
@@ -624,14 +617,14 @@ Item {
             maxHeight:          parent.height - toolStrip.y
             title:              qsTr("Plan")
 
-            //readonly property int flyButtonIndex:       0
-            readonly property int fileButtonIndex:      0
-            readonly property int takeoffButtonIndex:   1
-            readonly property int waypointButtonIndex:  2
-            readonly property int roiButtonIndex:       3
-            readonly property int patternButtonIndex:   4
-            readonly property int landButtonIndex:      5
-            readonly property int centerButtonIndex:    6
+            readonly property int flyButtonIndex:       0
+            readonly property int fileButtonIndex:      1
+            readonly property int takeoffButtonIndex:   2
+            readonly property int waypointButtonIndex:  3
+            readonly property int roiButtonIndex:       4
+            readonly property int patternButtonIndex:   5
+            readonly property int landButtonIndex:      6
+            readonly property int centerButtonIndex:    7
 
             property bool _isRallyLayer:    _editingLayer == _layerRallyPoints
             property bool _isMissionLayer:  _editingLayer == _layerMission
@@ -639,6 +632,11 @@ Item {
             ToolStripActionList {
                 id: toolStripActionList
                 model: [
+                    ToolStripAction {
+                        text:           qsTr("Fly")
+                        iconSource:     "/qmlimages/PaperPlane.svg"
+                        onTriggered:    mainWindow.showFlyView()
+                    },
                     ToolStripAction {
                         text:                   qsTr("File")
                         enabled:                !_planMasterController.syncInProgress
@@ -652,21 +650,19 @@ Item {
                         text:       qsTr("Takeoff")
                         iconSource: "/res/takeoff.svg"
                         enabled:    _missionController.isInsertTakeoffValid
-                        visible:    toolStrip._isMissionLayer
+                        visible:    toolStrip._isMissionLayer && !_planMasterController.controllerVehicle.rover
                         onTriggered: {
                             toolStrip.allAddClickBoolsOff()
                             insertTakeItemAfterCurrent()
                         }
                     },
                     ToolStripAction {
+                        id:                 addWaypointRallyPointAction
                         text:               _editingLayer == _layerRallyPoints ? qsTr("Rally Point") : qsTr("Waypoint")
                         iconSource:         "/qmlimages/MapAddMission.svg"
                         enabled:            toolStrip._isRallyLayer ? true : _missionController.flyThroughCommandsAllowed
                         visible:            toolStrip._isRallyLayer || toolStrip._isMissionLayer
                         checkable:          true
-                        onCheckedChanged:   _addWaypointOnClick = checked
-                        property bool myAddWaypointOnClick: _addWaypointOnClick
-                        onMyAddWaypointOnClickChanged: checked = _addWaypointOnClick
                     },
                     ToolStripAction {
                         text:               _missionController.isROIActive ? qsTr("Cancel ROI") : qsTr("ROI")
@@ -721,7 +717,7 @@ Item {
 
             function allAddClickBoolsOff() {
                 _addROIOnClick =        false
-                _addWaypointOnClick =   false
+                addWaypointRallyPointAction.checked = false
             }
 
             onDropped: allAddClickBoolsOff()
@@ -1035,7 +1031,7 @@ Item {
                 id:                 unsavedChangedLabel
                 Layout.fillWidth:   true
                 wrapMode:           Text.WordWrap
-                text:               activeVehicle ?
+                text:               globals.activeVehicle ?
                                         qsTr("You have unsaved changes. You should upload to your vehicle, or save to a file.") :
                                         qsTr("You have unsaved changes.")
                 visible:            _planMasterController.dirty

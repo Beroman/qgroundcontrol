@@ -26,7 +26,7 @@ SetupPage {
     id:             firmwarePage
     pageComponent:  firmwarePageComponent
     pageName:       qsTr("Firmware")
-    showAdvanced:   activeVehicle && activeVehicle.apmFirmware
+    showAdvanced:   globals.activeVehicle && globals.activeVehicle.apmFirmware
 
     Component {
         id: firmwarePageComponent
@@ -97,7 +97,7 @@ SetupPage {
                 property var activeVehicle: QGroundControl.multiVehicleManager.activeVehicle
 
                 onActiveVehicleChanged: {
-                    if (!activeVehicle) {
+                    if (!globals.activeVehicle) {
                         statusTextArea.append(plugInText)
                     }
                 }
@@ -128,7 +128,7 @@ SetupPage {
                             statusTextArea.append(qsTr("Detected [%1]: ").arg(availableDevices.length) + availableDevices.join(", "))
                         }
                         if (QGroundControl.multiVehicleManager.activeVehicle) {
-                            QGroundControl.multiVehicleManager.activeVehicle.autoDisconnect = true
+                            QGroundControl.multiVehicleManager.activeVehicle.vehicleLinkManager.autoDisconnect = true
                         }
                     } else {
                         // We end up here when we detect a board plugged in after we've started upgrade
@@ -136,8 +136,8 @@ SetupPage {
                     }
                 }
 
-                onBootloaderFound:  mainWindow.showComponentDialog(firmwareSelectDialogComponent, title, mainWindow.showDialogDefaultWidth, StandardButton.Ok | StandardButton.Cancel)
-                onError:            statusTextArea.append(flashFailText)
+                onShowFirmwareSelectDlg:    mainWindow.showComponentDialog(firmwareSelectDialogComponent, title, mainWindow.showDialogDefaultWidth, StandardButton.Ok | StandardButton.Cancel)
+                onError:                    statusTextArea.append(flashFailText)
             }
 
             Component {
@@ -303,7 +303,7 @@ SetupPage {
                             id:             mainColumn
                             anchors.left:   parent.left
                             anchors.right:  parent.right
-                            spacing:        defaultTextHeight
+                            spacing:        globals.defaultTextHeight
 
                             QGCLabel {
                                 width:      parent.width
@@ -329,7 +329,7 @@ SetupPage {
                                 QGCRadioButton {
                                     id:             px4FlightStackRadio
                                     text:           qsTr("PX4 Pro ")
-                                    textBold:       _defaultFirmwareIsPX4
+                                    font.bold:      _defaultFirmwareIsPX4
                                     checked:        _defaultFirmwareIsPX4
                                     visible:        !_singleFirmwareMode && !px4Flow && QGroundControl.apmFirmwareSupported
 
@@ -342,7 +342,7 @@ SetupPage {
                                 QGCRadioButton {
                                     id:             apmFlightStack
                                     text:           qsTr("ArduPilot")
-                                    textBold:       !_defaultFirmwareIsPX4
+                                    font.bold:      !_defaultFirmwareIsPX4
                                     checked:        !_defaultFirmwareIsPX4
                                     visible:        !_singleFirmwareMode && !px4Flow && QGroundControl.apmFirmwareSupported
 
@@ -511,7 +511,7 @@ SetupPage {
                 id:         flashBootloaderButton
                 text:       qsTr("Flash ChibiOS Bootloader")
                 visible:    firmwarePage.advanced
-                onClicked:  activeVehicle.flashBootloader()
+                onClicked:  globals.activeVehicle.flashBootloader()
             }
 
             TextArea {

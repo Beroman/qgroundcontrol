@@ -110,11 +110,13 @@ SOURCES += \
 
 #
 # [REQUIRED] zlib library
-Windows {
+WindowsBuild {
     INCLUDEPATH +=  $$SOURCE_DIR/libs/zlib/windows/include
     LIBS += -L$$SOURCE_DIR/libs/zlib/windows/lib
+    LIBS += -lzlibstat
+} else {
+    LIBS += -lz
 }
-LIBS += -lz
 
 #
 # [REQUIRED] SDL dependency. Provides joystick/gamepad support.

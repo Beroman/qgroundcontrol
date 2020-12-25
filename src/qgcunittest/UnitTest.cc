@@ -7,12 +7,6 @@
  *
  ****************************************************************************/
 
-
-/// @file
-///     @brief Base class for all unit tests
-///
-///     @author Don Gagne <don@thegagnes.com>
-
 #include "UnitTest.h"
 #include "QGCApplication.h"
 #include "MAVLinkProtocol.h"
@@ -20,6 +14,7 @@
 #include "AppSettings.h"
 #include "SettingsManager.h"
 #include "MockLink.h"
+#include "LinkManager.h"
 
 #include <QRandomGenerator>
 #include <QTemporaryFile>
@@ -97,7 +92,6 @@ void UnitTest::init(void)
 
     if (!_linkManager) {
         _linkManager = qgcApp()->toolbox()->linkManager();
-        connect(_linkManager, &LinkManager::linkDeleted, this, &UnitTest::_linkDeleted);
     }
 
     _linkManager->restart();
@@ -373,6 +367,8 @@ void UnitTest::_connectMockLink(MAV_AUTOPILOT autopilot)
 {
     Q_ASSERT(!_mockLink);
 
+    QSignalSpy spyVehicle(qgcApp()->toolbox()->multiVehicleManager(), &MultiVehicleManager::activeVehicleChanged);
+
     switch (autopilot) {
     case MAV_AUTOPILOT_PX4:
         _mockLink = MockLink::startPX4MockLink(false);
@@ -392,7 +388,6 @@ void UnitTest::_connectMockLink(MAV_AUTOPILOT autopilot)
     }
 
     // Wait for the Vehicle to get created
-    QSignalSpy spyVehicle(qgcApp()->toolbox()->multiVehicleManager(), &MultiVehicleManager::activeVehicleChanged);
     QCOMPARE(spyVehicle.wait(10000), true);
     _vehicle = qgcApp()->toolbox()->multiVehicleManager()->activeVehicle();
     QVERIFY(_vehicle);
@@ -407,15 +402,15 @@ void UnitTest::_connectMockLink(MAV_AUTOPILOT autopilot)
 void UnitTest::_disconnectMockLink(void)
 {
     if (_mockLink) {
-        QSignalSpy  linkSpy(_linkManager, SIGNAL(linkDeleted(LinkInterface*)));
+        QSignalSpy spyVehicle(qgcApp()->toolbox()->multiVehicleManager(), &MultiVehicleManager::activeVehicleChanged);
 
-        _linkManager->disconnectLink(_mockLink);
+        _mockLink->disconnect();
+        _mockLink = nullptr;
 
-        // Wait for link to go away
-        linkSpy.wait(1000);
-        QCOMPARE(linkSpy.count(), 1);
-
-        _vehicle = nullptr;
+        // Wait for all the vehicle to go away
+        QCOMPARE(spyVehicle.wait(10000), true);
+        _vehicle = qgcApp()->toolbox()->multiVehicleManager()->activeVehicle();
+        QVERIFY(!_vehicle);
     }
 }
 
@@ -494,19 +489,6 @@ bool UnitTest::fileCompare(const QString& file1, const QString& file2)
     return true;
 }
 
-bool UnitTest::doubleNaNCompare(double value1, double value2)
-{
-    if (qIsNaN(value1) && qIsNaN(value2)) {
-        return true;
-    } else {
-        bool ret = qFuzzyCompare(value1, value2);
-        if (!ret) {
-            qDebug() << value1 << value2;
-        }
-        return ret;
-    }
-}
-
 void UnitTest::changeFactValue(Fact* fact,double increment)
 {
     if (fact->typeIsBool()) {
@@ -525,16 +507,21 @@ void UnitTest::_missionItemsEqual(MissionItem& actual, MissionItem& expected)
     QCOMPARE(static_cast<int>(actual.frame()),      static_cast<int>(expected.frame()));
     QCOMPARE(actual.autoContinue(),                 expected.autoContinue());
 
-    QVERIFY(UnitTest::doubleNaNCompare(actual.param1(), expected.param1()));
-    QVERIFY(UnitTest::doubleNaNCompare(actual.param2(), expected.param2()));
-    QVERIFY(UnitTest::doubleNaNCompare(actual.param3(), expected.param3()));
-    QVERIFY(UnitTest::doubleNaNCompare(actual.param4(), expected.param4()));
-    QVERIFY(UnitTest::doubleNaNCompare(actual.param5(), expected.param5()));
-    QVERIFY(UnitTest::doubleNaNCompare(actual.param6(), expected.param6()));
-    QVERIFY(UnitTest::doubleNaNCompare(actual.param7(), expected.param7()));
+    QVERIFY(QGC::fuzzyCompare(actual.param1(), expected.param1()));
+    QVERIFY(QGC::fuzzyCompare(actual.param2(), expected.param2()));
+    QVERIFY(QGC::fuzzyCompare(actual.param3(), expected.param3()));
+    QVERIFY(QGC::fuzzyCompare(actual.param4(), expected.param4()));
+    QVERIFY(QGC::fuzzyCompare(actual.param5(), expected.param5()));
+    QVERIFY(QGC::fuzzyCompare(actual.param6(), expected.param6()));
+    QVERIFY(QGC::fuzzyCompare(actual.param7(), expected.param7()));
 }
 
 bool UnitTest::fuzzyCompareLatLon(const QGeoCoordinate& coord1, const QGeoCoordinate& coord2)
 {
     return coord1.distanceTo(coord2) < 1.0;
+}
+
+QGeoCoordinate UnitTest::changeCoordinateValue(const QGeoCoordinate& coordinate)
+{
+    return coordinate.atDistanceAndAzimuth(1, 0);
 }

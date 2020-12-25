@@ -34,22 +34,23 @@ public:
     // Overrides from CompInfo
     void setJson(const QString& metadataJsonFileName, const QString& translationJsonFileName) override;
 
-    // The following methods are used to support the old non-COMPONENT_INFORMATION based mechanism to get parameter meta data
-    bool _isParameterVolatile       (const QString& name);
-    void _parameterMajorVersionKnown(int wantedMajorVersion);
-    void _clearPX4ParameterMetaData (void);
     static void _cachePX4MetaDataFile(const QString& metaDataFile);
 
 private:
+    QObject* _getOpaqueParameterMetaData(void);
+
     static FirmwarePlugin*  _anyVehicleTypeFirmwarePlugin   (MAV_AUTOPILOT firmwareType);
-    static QString          _parameterMetaDataFile          (Vehicle* vehicle, MAV_AUTOPILOT firmwareType, int wantedMajorVersion, int& majorVersion, int& minorVersion);
+    static QString          _parameterMetaDataFile          (Vehicle* vehicle, MAV_AUTOPILOT firmwareType, int& majorVersion, int& minorVersion);
+
+    typedef QPair<QString /* indexed name */, FactMetaData*> RegexFactMetaDataPair_t;
 
     bool                                _noJsonMetadata             = true;
     FactMetaData::NameToMetaDataMap_t   _nameToMetaDataMap;
+    QList<RegexFactMetaDataPair_t>      _indexedNameMetaDataList;
     QObject*                            _opaqueParameterMetaData    = nullptr;
 
     static const char* _cachedMetaDataFilePrefix;
-
     static const char* _jsonScopeKey;
     static const char* _jsonParametersKey;
+    static const char* _indexedNameTag;
 };

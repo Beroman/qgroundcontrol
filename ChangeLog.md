@@ -4,6 +4,13 @@ Note: This file only contains high level features or important fixes.
 
 ## 4.1 - Daily build
 
+* Support simple cameras which only support DIGICAM_CONTROL in the Photo/Video control on Fly View.
+* Load Parameters From File: Support loading parameters which don't currently existing on the vehicle.
+* Load Parameters From File: Add dialog which shows diff of file and vehicle params. Selective param upload from file.
+* Video Streaming: New camera control supports capturing individual images from the stream
+* Fly: Press and hold on arm button will change it to Force Arm. Click again to force arm.
+* VTOL: General setting for transition distance which affects Plan takeoff, landing pattern creation
+* VTOL: Much better VTOL support throughout QGC
 * Maps: Support zoom up to level 23 even if map provider doesn't provide tiles that high
 * Settings/Mavlink: Add ability to forward mavlink traffic out specified UDP port
 * Support mavlink terrain protocol which queries gcs for terrain height information. Allows planning missions with TERRAIN\_FRAME.

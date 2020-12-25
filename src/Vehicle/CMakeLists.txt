@@ -4,14 +4,14 @@ if(BUILD_TESTING)
 	list(APPEND EXTRA_SRC
 		FTPManagerTest.cc
 		FTPManagerTest.h
-		InitialConnectTest.cc
-		InitialConnectTest.h
 		RequestMessageTest.cc
 		RequestMessageTest.h
 		SendMavCommandWithHandlerTest.cc
 		SendMavCommandWithHandlerTest.h
 		SendMavCommandWithSignallingTest.cc
 		SendMavCommandWithSignallingTest.h
+		VehicleLinkManagerTest.cc
+		VehicleLinkManagerTest.h
 	)
 endif()
 
@@ -36,16 +36,40 @@ add_library(Vehicle
 	MultiVehicleManager.h
 	StateMachine.cc
 	StateMachine.h
+	SysStatusSensorInfo.cc
+	SysStatusSensorInfo.h
 	TerrainFactGroup.cc
 	TerrainFactGroup.h
 	TerrainProtocolHandler.cc
 	TerrainProtocolHandler.h
 	TrajectoryPoints.cc
 	TrajectoryPoints.h
+	VehicleBatteryFactGroup.cc
+	VehicleBatteryFactGroup.h
 	Vehicle.cc
+	VehicleClockFactGroup.cc
+	VehicleClockFactGroup.h
+	VehicleDistanceSensorFactGroup.cc
+	VehicleDistanceSensorFactGroup.h
+	VehicleEscStatusFactGroup.cc
+	VehicleEscStatusFactGroup.h
+	VehicleEstimatorStatusFactGroup.cc
+	VehicleEstimatorStatusFactGroup.h
+	VehicleGPSFactGroup.cc
+	VehicleGPSFactGroup.h
 	Vehicle.h
+	VehicleLinkManager.cc
+	VehicleLinkManager.h
 	VehicleObjectAvoidance.cc
 	VehicleObjectAvoidance.h
+	VehicleSetpointFactGroup.cc
+	VehicleSetpointFactGroup.h
+	VehicleTemperatureFactGroup.cc
+	VehicleTemperatureFactGroup.h
+	VehicleVibrationFactGroup.cc
+	VehicleVibrationFactGroup.h
+	VehicleWindFactGroup.cc
+	VehicleWindFactGroup.h
 
 	${EXTRA_SRC}
 )

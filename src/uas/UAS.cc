@@ -67,7 +67,6 @@ UAS::UAS(MAVLinkProtocol* protocol, Vehicle* vehicle, FirmwarePluginManager * fi
     imagePackets(0),    // We must initialize to 0, otherwise extended data packets maybe incorrectly thought to be images
 
     blockHomePositionChanges(false),
-    receivedMode(false),
 
     // Note variances calculated from flight case from this log: http://dash.oznet.ch/view/MRjW8NUNYQSuSZkbn8dEjY
     // TODO: calibrate stand-still pixhawk variances
@@ -144,122 +143,8 @@ void UAS::receiveMessage(mavlink_message_t message)
     // and we already got one attitude packet
     if (message.sysid == uasId && (!attitudeStamped || lastAttitude != 0 || message.msgid == MAVLINK_MSG_ID_ATTITUDE))
     {
-        bool multiComponentSourceDetected = false;
-        bool wrongComponent = false;
-
-        switch (message.compid)
-        {
-        case MAV_COMP_ID_IMU_2:
-            // Prefer IMU 2 over IMU 1 (FIXME)
-            componentID[message.msgid] = MAV_COMP_ID_IMU_2;
-            break;
-        default:
-            // Do nothing
-            break;
-        }
-
-        // Store component ID
-        if (!componentID.contains(message.msgid))
-        {
-            // Prefer the first component
-            componentID[message.msgid] = message.compid;
-            componentMulti[message.msgid] = false;
-        }
-        else
-        {
-            // Got this message already
-            if (componentID[message.msgid] != message.compid)
-            {
-                componentMulti[message.msgid] = true;
-                wrongComponent = true;
-            }
-        }
-
-        if (componentMulti[message.msgid] == true) {
-            multiComponentSourceDetected = true;
-        }
-
-
         switch (message.msgid)
         {
-        case MAVLINK_MSG_ID_HEARTBEAT:
-        {
-            if (multiComponentSourceDetected && wrongComponent)
-            {
-                break;
-            }
-            mavlink_heartbeat_t state;
-            mavlink_msg_heartbeat_decode(&message, &state);
-
-            // Send the base_mode and system_status values to the plotter. This uses the ground time
-            // so the Ground Time checkbox must be ticked for these values to display
-            quint64 time = getUnixTime();
-            QString name = QString("M%1:HEARTBEAT.%2").arg(message.sysid);
-            emit valueChanged(uasId, name.arg("base_mode"), "bits", state.base_mode, time);
-            emit valueChanged(uasId, name.arg("custom_mode"), "bits", state.custom_mode, time);
-            emit valueChanged(uasId, name.arg("system_status"), "-", state.system_status, time);
-
-            // We got the mode
-            receivedMode = true;
-        }
-
-            break;
-
-        case MAVLINK_MSG_ID_SYS_STATUS:
-        {
-            if (multiComponentSourceDetected && wrongComponent)
-            {
-                break;
-            }
-            mavlink_sys_status_t state;
-            mavlink_msg_sys_status_decode(&message, &state);
-
-            // Prepare for sending data to the realtime plotter, which is every field excluding onboard_control_sensors_present.
-            quint64 time = getUnixTime();
-            QString name = QString("M%1:SYS_STATUS.%2").arg(message.sysid);
-            emit valueChanged(uasId, name.arg("sensors_enabled"), "bits", state.onboard_control_sensors_enabled, time);
-            emit valueChanged(uasId, name.arg("sensors_health"), "bits", state.onboard_control_sensors_health, time);
-            emit valueChanged(uasId, name.arg("errors_comm"), "-", state.errors_comm, time);
-            emit valueChanged(uasId, name.arg("errors_count1"), "-", state.errors_count1, time);
-            emit valueChanged(uasId, name.arg("errors_count2"), "-", state.errors_count2, time);
-            emit valueChanged(uasId, name.arg("errors_count3"), "-", state.errors_count3, time);
-            emit valueChanged(uasId, name.arg("errors_count4"), "-", state.errors_count4, time);
-
-            // Process CPU load.
-            emit valueChanged(uasId, name.arg("load"), "%", state.load/10.0f, time);
-            emit valueChanged(uasId, name.arg("drop_rate_comm"), "%", state.drop_rate_comm/100.0f, time);
-        }
-            break;
-
-        case MAVLINK_MSG_ID_PARAM_VALUE:
-        {
-            mavlink_param_value_t rawValue;
-            mavlink_msg_param_value_decode(&message, &rawValue);
-            QByteArray bytes(rawValue.param_id, MAVLINK_MSG_PARAM_VALUE_FIELD_PARAM_ID_LEN);
-            // Construct a string stopping at the first NUL (0) character, else copy the whole
-            // byte array (max MAVLINK_MSG_PARAM_VALUE_FIELD_PARAM_ID_LEN, so safe)
-            QString parameterName(bytes);
-            mavlink_param_union_t paramVal;
-            paramVal.param_float = rawValue.param_value;
-            paramVal.type = rawValue.param_type;
-
-            processParamValueMsg(message, parameterName,rawValue,paramVal);
-         }
-            break;
-        case MAVLINK_MSG_ID_ATTITUDE_TARGET:
-        {
-            mavlink_attitude_target_t out;
-            mavlink_msg_attitude_target_decode(&message, &out);
-            float roll, pitch, yaw;
-            mavlink_quaternion_to_euler(out.q, &roll, &pitch, &yaw);
-            quint64 time = getUnixTimeFromMs(out.time_boot_ms);
-
-            // For plotting emit roll sp, pitch sp and yaw sp values
-            emit valueChanged(uasId, "roll sp", "rad", roll, time);
-            emit valueChanged(uasId, "pitch sp", "rad", pitch, time);
-            emit valueChanged(uasId, "yaw sp", "rad", yaw, time);
-        }
-            break;
 
         case MAVLINK_MSG_ID_DATA_TRANSMISSION_HANDSHAKE:
         {
@@ -347,130 +232,6 @@ void UAS::receiveMessage(mavlink_message_t message)
 #else
 #pragma warning(pop, 0)
 #endif
-
-void UAS::startCalibration(UASInterface::StartCalibrationType calType)
-{
-    if (!_vehicle) {
-        return;
-    }
-
-    int gyroCal = 0;
-    int magCal = 0;
-    int airspeedCal = 0;
-    int radioCal = 0;
-    int accelCal = 0;
-    int pressureCal = 0;
-    int escCal = 0;
-
-    switch (calType) {
-    case StartCalibrationGyro:
-        gyroCal = 1;
-        break;
-    case StartCalibrationMag:
-        magCal = 1;
-        break;
-    case StartCalibrationAirspeed:
-        airspeedCal = 1;
-        break;
-    case StartCalibrationRadio:
-        radioCal = 1;
-        break;
-    case StartCalibrationCopyTrims:
-        radioCal = 2;
-        break;
-    case StartCalibrationAccel:
-        accelCal = 1;
-        break;
-    case StartCalibrationLevel:
-        accelCal = 2;
-        break;
-    case StartCalibrationPressure:
-        pressureCal = 1;
-        break;
-    case StartCalibrationEsc:
-        escCal = 1;
-        break;
-    case StartCalibrationUavcanEsc:
-        escCal = 2;
-        break;
-    case StartCalibrationCompassMot:
-        airspeedCal = 1; // ArduPilot, bit of a hack
-        break;
-    }
-
-    // We can't use sendMavCommand here since we have no idea how long it will be before the command returns a result. This in turn
-    // causes the retry logic to break down.
-    mavlink_message_t msg;
-    mavlink_msg_command_long_pack_chan(mavlink->getSystemId(),
-                                       mavlink->getComponentId(),
-                                       _vehicle->priorityLink()->mavlinkChannel(),
-                                       &msg,
-                                       uasId,
-                                       _vehicle->defaultComponentId(),   // target component
-                                       MAV_CMD_PREFLIGHT_CALIBRATION,    // command id
-                                       0,                                // 0=first transmission of command
-                                       gyroCal,                          // gyro cal
-                                       magCal,                           // mag cal
-                                       pressureCal,                      // ground pressure
-                                       radioCal,                         // radio cal
-                                       accelCal,                         // accel cal
-                                       airspeedCal,                      // PX4: airspeed cal, ArduPilot: compass mot
-                                       escCal);                          // esc cal
-    _vehicle->sendMessageOnLinkThreadSafe(_vehicle->priorityLink(), msg);
-}
-
-void UAS::stopCalibration(void)
-{
-    if (!_vehicle) {
-        return;
-    }
-
-    _vehicle->sendMavCommand(_vehicle->defaultComponentId(),    // target component
-                             MAV_CMD_PREFLIGHT_CALIBRATION,     // command id
-                             true,                              // showError
-                             0,                                 // gyro cal
-                             0,                                 // mag cal
-                             0,                                 // ground pressure
-                             0,                                 // radio cal
-                             0,                                 // accel cal
-                             0,                                 // airspeed cal
-                             0);                                // unused
-}
-
-void UAS::startBusConfig(UASInterface::StartBusConfigType calType)
-{
-    if (!_vehicle) {
-        return;
-    }
-
-   int actuatorCal = 0;
-
-    switch (calType) {
-        case StartBusConfigActuators:
-            actuatorCal = 1;
-        break;
-        case EndBusConfigActuators:
-            actuatorCal = 0;
-        break;
-    }
-
-    _vehicle->sendMavCommand(_vehicle->defaultComponentId(),    // target component
-                             MAV_CMD_PREFLIGHT_UAVCAN,          // command id
-                             true,                              // showError
-                             actuatorCal);                      // actuators
-}
-
-void UAS::stopBusConfig(void)
-{
-    if (!_vehicle) {
-        return;
-    }
-
-    _vehicle->sendMavCommand(_vehicle->defaultComponentId(),    // target component
-                             MAV_CMD_PREFLIGHT_UAVCAN,          // command id
-                             true,                              // showError
-                             0);                                // cancel
-}
 
 /**
 * Check if time is smaller than 40 years, assuming no system without Unix
@@ -712,19 +473,22 @@ void UAS::requestImage()
         return;
     }
 
-   qDebug() << "trying to get an image from the uas...";
+    WeakLinkInterfacePtr weakLink = _vehicle->vehicleLinkManager()->primaryLink();
+
+    qDebug() << "trying to get an image from the uas...";
 
     // check if there is already an image transmission going on
-    if (imagePacketsArrived == 0)
-    {
-        mavlink_message_t msg;
+    if (!weakLink.expired() && imagePacketsArrived == 0) {
+        mavlink_message_t       msg;
+        SharedLinkInterfacePtr  sharedLink = weakLink.lock();
+
         mavlink_msg_data_transmission_handshake_pack_chan(mavlink->getSystemId(),
                                                           mavlink->getComponentId(),
-                                                          _vehicle->priorityLink()->mavlinkChannel(),
+                                                          sharedLink->mavlinkChannel(),
                                                           &msg,
                                                           MAVLINK_DATA_STREAM_IMG_JPEG,
                                                           0, 0, 0, 0, 0, 50);
-        _vehicle->sendMessageOnLinkThreadSafe(_vehicle->priorityLink(), msg);
+        _vehicle->sendMessageOnLinkThreadSafe(sharedLink.get(), msg);
     }
 }
 
@@ -746,61 +510,6 @@ quint64 UAS::getUptime() const
     {
         return QGC::groundTimeMilliseconds() - startTime;
     }
-}
-
-//TODO update this to use the parameter manager / param data model instead
-void UAS::processParamValueMsg(mavlink_message_t& msg, const QString& paramName, const mavlink_param_value_t& rawValue,  mavlink_param_union_t& paramUnion)
-{
-    int compId = msg.compid;
-
-    QVariant paramValue;
-
-    // Insert with correct type
-
-    switch (rawValue.param_type) {
-        case MAV_PARAM_TYPE_REAL32:
-            paramValue = QVariant(paramUnion.param_float);
-            break;
-
-        case MAV_PARAM_TYPE_UINT8:
-            paramValue = QVariant(paramUnion.param_uint8);
-            break;
-
-        case MAV_PARAM_TYPE_INT8:
-            paramValue = QVariant(paramUnion.param_int8);
-            break;
-
-        case MAV_PARAM_TYPE_UINT16:
-            paramValue = QVariant(paramUnion.param_uint16);
-            break;
-
-        case MAV_PARAM_TYPE_INT16:
-            paramValue = QVariant(paramUnion.param_int16);
-            break;
-
-        case MAV_PARAM_TYPE_UINT32:
-            paramValue = QVariant(paramUnion.param_uint32);
-            break;
-
-        case MAV_PARAM_TYPE_INT32:
-            paramValue = QVariant(paramUnion.param_int32);
-            break;
-
-        //-- Note: These are not handled above:
-        //
-        //   MAV_PARAM_TYPE_UINT64
-        //   MAV_PARAM_TYPE_INT64
-        //   MAV_PARAM_TYPE_REAL64
-        //
-        //   No space in message (the only storage allocation is a "float") and not present in mavlink_param_union_t
-
-        default:
-            qCritical() << "INVALID DATA TYPE USED AS PARAMETER VALUE: " << rawValue.param_type;
-    }
-
-    qCDebug(UASLog) << "Received PARAM_VALUE" << paramName << paramValue << rawValue.param_type;
-
-    emit parameterUpdate(uasId, compId, paramName, rawValue.param_count, rawValue.param_index, rawValue.param_type, paramValue);
 }
 
 /**

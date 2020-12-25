@@ -7,8 +7,7 @@
  *
  ****************************************************************************/
 
-#ifndef PlanManager_H
-#define PlanManager_H
+#pragma once
 
 #include <QObject>
 #include <QLoggingCategory>
@@ -138,7 +137,6 @@ protected:
     Vehicle*            _vehicle =              nullptr;
     MissionCommandTree* _missionCommandTree =   nullptr;
     MAV_MISSION_TYPE    _planType;
-    LinkInterface*      _dedicatedLink =        nullptr;
 
     QTimer*             _ackTimeoutTimer =      nullptr;
     AckType_t           _expectedAck;
@@ -159,5 +157,3 @@ protected:
 private:
     void _setTransactionInProgress(TransactionType_t type);
 };
-
-#endif

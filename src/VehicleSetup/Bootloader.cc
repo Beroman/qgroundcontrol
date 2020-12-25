@@ -108,7 +108,6 @@ bool Bootloader::getBoardInfo(uint32_t& bootloaderVersion, uint32_t& boardID, ui
             QString boardIdStr = _getNextLine(2000);
             bool ok = false;
             _boardID = boardIdStr.toInt(&ok);
-            _boardID = 130;
             if (boardIdStr.isEmpty() || !ok) {
                 _errorString = tr("Radio did not return board id");
                 goto Error;
@@ -167,9 +166,10 @@ bool Bootloader::initFlashSequence(void)
             return false;
         }
         _port.setBaudRate(QSerialPort::Baud115200);
-    }
-    if (!_sync()) {
-        return false;
+
+        if (!_sync()) {
+            return false;
+        }
     }
     return true;
 }
@@ -330,6 +330,8 @@ bool Bootloader::_sendCommand(const uint8_t cmd, int responseTimeout)
     if (!_write(buf, 2)) {
         goto Error;
     }
+    _port.flush();
+
     if (!_getCommandResponse(responseTimeout)) {
         goto Error;
     }
@@ -710,6 +712,10 @@ bool Bootloader::_sync(void)
     bool success = false;
     for (int i=0; i<3; i++) {
         success = _syncWorker();
+
+        if (success) {
+            return true;
+        }
     }
     return success;
 }

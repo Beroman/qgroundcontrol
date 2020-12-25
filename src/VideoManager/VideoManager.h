@@ -109,7 +109,7 @@ public:
     Q_INVOKABLE void startRecording (const QString& videoFile = QString());
     Q_INVOKABLE void stopRecording  ();
 
-    Q_INVOKABLE void grabImage(const QString& imageFile);
+    Q_INVOKABLE void grabImage(const QString& imageFile = QString());
 
 signals:
     void hasVideoChanged            ();
@@ -136,7 +136,7 @@ protected slots:
     void _updateUVC                 ();
     void _setActiveVehicle          (Vehicle* vehicle);
     void _aspectRatioChanged        ();
-    void _connectionLostChanged     (bool connectionLost);
+    void _communicationLostChanged  (bool communicationLost);
 
 protected:
     friend class FinishVideoInitialization;

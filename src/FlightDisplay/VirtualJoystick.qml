@@ -24,11 +24,11 @@ Item {
 
     Timer {
         interval:   40  // 25Hz, same as real joystick rate
-        running:    QGroundControl.settingsManager.appSettings.virtualJoystick.value && activeVehicle
+        running:    QGroundControl.settingsManager.appSettings.virtualJoystick.value && _activeVehicle
         repeat:     true
         onTriggered: {
-            if (activeVehicle) {
-                activeVehicle.virtualTabletJoystickValue(rightStick.xAxis, rightStick.yAxis, leftStick.xAxis, leftStick.yAxis)
+            if (_activeVehicle) {
+                _activeVehicle.virtualTabletJoystickValue(rightStick.xAxis, rightStick.yAxis, leftStick.xAxis, leftStick.yAxis)
             }
         }
     }
@@ -41,7 +41,7 @@ Item {
         anchors.bottom:         parent.bottom
         width:                  parent.height
         height:                 parent.height
-        yAxisPositiveRangeOnly: _activeVehicle && !_activeVehicle.rover && !_activeVehicle.sub
+        yAxisPositiveRangeOnly: _activeVehicle && !_activeVehicle.rover
         yAxisReCenter:          autoCenterThrottle
     }
 

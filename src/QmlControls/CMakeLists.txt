@@ -37,8 +37,6 @@ add_library(QmlControls
 	ToolStripAction.h
 	ToolStripActionList.cc
 	ToolStripActionList.h
-	VerticalFactValueGrid.cc
-	VerticalFactValueGrid.h
 )
 
 add_custom_target(QmlControlsQml
@@ -57,7 +55,6 @@ add_custom_target(QmlControlsQml
 		FlightModeDropdown.qml
 		FlightModeMenu.qml
 		HackAndroidFileDialog.qml
-		HackFileDialog.qml
 		HeightIndicator.qml
 		HorizontalFactValueGrid.qml
 		IndicatorButton.qml
@@ -76,7 +73,7 @@ add_custom_target(QmlControlsQml
 		ModeSwitchDisplay.qml
 		MultiRotorMotorDisplay.qml
 		OfflineMapButton.qml
-		PageView.qml
+		ParameterDiffDialog.qml
 		ParameterEditorDialog.qml
 		ParameterEditor.qml
 		PIDTuning.qml
@@ -131,7 +128,6 @@ add_custom_target(QmlControlsQml
 		ToolStrip.qml
 		VehicleRotationCal.qml
 		VehicleSummaryRow.qml
-		VerticalFactValueGrid.qml
 )
 target_link_libraries(QmlControls
         PUBLIC

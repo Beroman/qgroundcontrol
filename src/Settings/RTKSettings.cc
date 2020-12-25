@@ -8,6 +8,7 @@
  ****************************************************************************/
 
 #include "RTKSettings.h"
+#include "LinkManager.h"
 #include "QGCApplication.h"
 
 #include <QQmlEngine>

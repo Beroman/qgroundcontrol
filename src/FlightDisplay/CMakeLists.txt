@@ -30,7 +30,6 @@ add_custom_target(FligthDisplayQml
 		GuidedToolStripAction.qml
 		MultiRotorChecklist.qml
 		MultiVehicleList.qml
-		MultiVehiclePanel.qml
 		PreFlightBatteryCheck.qml
 		PreFlightCheckList.qml
 		PreFlightCheckListShowAction.qml
@@ -38,8 +37,11 @@ add_custom_target(FligthDisplayQml
 		PreFlightRCCheck.qml
 		PreFlightSensorsHealthCheck.qml
 		PreFlightSoundCheck.qml
+		ProximityRadarValues.qml
+		ProximityRadarVideoView.qml
 		RoverChecklist.qml
 		SubChecklist.qml
+		TelemetryValuesBar.qml
 		TerrainProgress.qml
 		VehicleWarnings.qml
 		VirtualJoystick.qml
