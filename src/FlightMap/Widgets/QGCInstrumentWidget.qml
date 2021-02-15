@@ -82,7 +82,7 @@ ColumnLayout {
                 value: 0
                 displayValue: true
                 onValueChanged: {
-                    activeVehicle.setColor(redSlider.value, greenSlider.value, blueSlider.value)
+                    globals.activeVehicle.setColor(redSlider.value, greenSlider.value, blueSlider.value)
                 }
             }
             QGCSlider {
@@ -95,7 +95,7 @@ ColumnLayout {
                 value: 0
                 displayValue: true
                 onValueChanged: {
-                    activeVehicle.setColor(redSlider.value, greenSlider.value, blueSlider.value)
+                    globals.activeVehicle.setColor(redSlider.value, greenSlider.value, blueSlider.value)
                 }
             }
             QGCSlider {
@@ -108,7 +108,7 @@ ColumnLayout {
                 value: 0
                 displayValue: true
                 onValueChanged: {
-                    activeVehicle.setColor(redSlider.value, greenSlider.value, blueSlider.value)
+                    globals.activeVehicle.setColor(redSlider.value, greenSlider.value, blueSlider.value)
                 }
             }
             Rectangle {

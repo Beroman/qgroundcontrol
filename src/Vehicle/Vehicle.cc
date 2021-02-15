@@ -2641,7 +2641,7 @@ bool Vehicle::_sendMavCommandShouldRetry(MAV_CMD command)
 void Vehicle::_sendMavCommandWorker(bool commandInt, bool requestMessage, bool showError, MavCmdResultHandler resultHandler, void* resultHandlerData, int targetCompId, MAV_CMD command, MAV_FRAME frame, float param1, float param2, float param3, float param4, float param5, float param6, float param7)
 {
     int entryIndex = _findMavCommandListEntryIndex(targetCompId, command);
-    if (entryIndex != -1 || targetCompId == MAV_COMP_ID_ALL) {
+    if ((entryIndex != -1 || targetCompId == MAV_COMP_ID_ALL) && command != MAV_CMD_DO_SET_SERVO) {
         bool    compIdAll       = targetCompId == MAV_COMP_ID_ALL;
         QString rawCommandName  = _toolbox->missionCommandTree()->rawName(command);
 
@@ -3849,14 +3849,11 @@ void Vehicle::setColor(qreal r, qreal g, qreal b)
         const int COLOR_MIN = 0;
 
         const int PVM_MIN = 0;
-        const int PVM_MAX = 32000;
-//        const int PVM_MIN = 0;
-//        const int PVM_MAX = 100;
+        const int PVM_MAX = 20000;
 
         int converted = PVM_MAX + (value - COLOR_MAX) * (PVM_MAX - PVM_MIN) / (COLOR_MAX - COLOR_MIN);
         return converted;
     };
-//    static bool isInit = true;
     qDebug() << "\n set Color" << r << g << b
              << toPVM(r) << toPVM(g) << toPVM(b);
     sendMavCommand(defaultComponentId(),
@@ -3864,7 +3861,6 @@ void Vehicle::setColor(qreal r, qreal g, qreal b)
                    true,        // show error
                    5,    // servo
                    toPVM(r)); // PVM
-//    if (isInit){
     sendMavCommand(defaultComponentId(),
                    MAV_CMD_DO_SET_SERVO,
                    true,        // show error
@@ -3875,35 +3871,4 @@ void Vehicle::setColor(qreal r, qreal g, qreal b)
                    true,        // show error
                    7,    // servo
                    toPVM(b)); // PVM
-
-//    sendMavCommand(_defaultComponentId,
-//                   MAV_CMD_DO_MOTOR_TEST,
-//                   true,
-//                   5,
-//                   MOTOR_TEST_THROTTLE_PERCENT,
-//                   toPVM(r),
-//                   0,
-//                   0,
-//                   MOTOR_TEST_ORDER_BOARD);
-//    sendMavCommand(_defaultComponentId,
-//                   MAV_CMD_DO_MOTOR_TEST,
-//                   true,
-//                   6,
-//                   MOTOR_TEST_THROTTLE_PERCENT,
-//                   toPVM(g),
-//                   0,
-//                   0,
-//                   MOTOR_TEST_ORDER_BOARD);
-//    sendMavCommand(_defaultComponentId,
-//                   MAV_CMD_DO_MOTOR_TEST,
-//                   true,
-//                   7,
-//                   MOTOR_TEST_THROTTLE_PERCENT,
-//                   toPVM(b),
-//                   0,
-//                   0,
-//                   MOTOR_TEST_ORDER_BOARD);
-
-//    isInit = false;
-//    }
 }
