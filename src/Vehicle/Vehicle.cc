@@ -3859,16 +3859,16 @@ void Vehicle::setColor(qreal r, qreal g, qreal b)
     sendMavCommand(defaultComponentId(),
                    MAV_CMD_DO_SET_SERVO,
                    true,        // show error
-                   5,    // servo
+                   7,    // servo
                    toPVM(r)); // PVM
     sendMavCommand(defaultComponentId(),
                    MAV_CMD_DO_SET_SERVO,
                    true,        // show error
-                   6,    // servo
+                   8,    // servo
                    toPVM(g)); // PVM
     sendMavCommand(defaultComponentId(),
                    MAV_CMD_DO_SET_SERVO,
                    true,        // show error
-                   7,    // servo
+                   9,    // servo
                    toPVM(b)); // PVM
 }
