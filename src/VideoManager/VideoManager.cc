@@ -105,11 +105,7 @@ VideoManager::setToolbox(QGCToolbox *toolbox)
    connect(pVehicleMgr, &MultiVehicleManager::activeVehicleChanged, this, &VideoManager::_setActiveVehicle);
 
 #if defined(QGC_GST_STREAMING)
-    bool forceSoftware = _videoSettings->forceVideoDecoder()->rawValue() == VideoSettings::VideoDecoderOptions::ForceVideoDecoderSoftware;
-    bool forceNVIDIA = _videoSettings->forceVideoDecoder()->rawValue() == VideoSettings::VideoDecoderOptions::ForceVideoDecoderNVIDIA;
-    bool forceVAAPI = _videoSettings->forceVideoDecoder()->rawValue() == VideoSettings::VideoDecoderOptions::ForceVideoDecoderVAAPI;
-    bool forceD3D11 = _videoSettings->forceVideoDecoder()->rawValue() == VideoSettings::VideoDecoderOptions::ForceVideoDecoderDirectX3D;
-    GStreamer::blacklist(forceSoftware, forceVAAPI, forceNVIDIA, forceD3D11);
+    GStreamer::blacklist(static_cast<VideoSettings::VideoDecoderOptions>(_videoSettings->forceVideoDecoder()->rawValue().toInt()));
 #ifndef QGC_DISABLE_UVC
    // If we are using a UVC camera setup the device name
    _updateUVC();
@@ -538,6 +534,7 @@ VideoManager::isGStreamer()
             videoSource == VideoSettings::videoSourceMPEGTS ||
             videoSource == VideoSettings::videoSource3DRSolo ||
             videoSource == VideoSettings::videoSourceParrotDiscovery ||
+            videoSource == VideoSettings::videoSourceYuneecMantisG ||
             autoStreamConfigured();
 #else
     return false;
@@ -696,6 +693,8 @@ VideoManager::_updateSettings(unsigned id)
         settingsChanged |= _updateVideoUri(0, QStringLiteral("udp://0.0.0.0:5600"));
     else if (source == VideoSettings::videoSourceParrotDiscovery)
         settingsChanged |= _updateVideoUri(0, QStringLiteral("udp://0.0.0.0:8888"));
+    else if (source == VideoSettings::videoSourceYuneecMantisG)
+        settingsChanged |= _updateVideoUri(0, QStringLiteral("rtsp://192.168.42.1:554/live"));
 
     return settingsChanged;
 }

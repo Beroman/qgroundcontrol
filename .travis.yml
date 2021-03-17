@@ -85,9 +85,9 @@ addons:
 
 before_install:
   # fetch entire git repo to properly determine the version
-  - if [ "${CONFIG}" = "installer" ]; then
-        cd ${TRAVIS_BUILD_DIR} && git fetch --unshallow && git fetch --all --tags;
-    fi
+  - cd ${TRAVIS_BUILD_DIR}
+  - git fetch --unshallow
+  - git fetch --all --tags
 
   # compile threads
   - if [ "${TRAVIS_OS_NAME}" = "linux" ]; then
@@ -112,7 +112,7 @@ install:
 
   # android dependencies: qt, gstreamer, android-ndk
   - if [ "${SPEC}" = "android-clang" ]; then
-        wget --quiet https://s3.amazonaws.com/downloads.bluerobotics.com/QGC/dependencies/gstreamer-1.0-android-universal-1.18.1.tar.xz &&
+        wget --quiet https://qgroundcontrol.s3-us-west-2.amazonaws.com/dependencies/gstreamer-1.0-android-universal-1.18.1.tar.xz &&
         mkdir gstreamer-1.0-android-universal-1.18.1 &&
         tar xf gstreamer-1.0-android-universal-1.18.1.tar.xz -C gstreamer-1.0-android-universal-1.18.1 &&
         wget --quiet https://dl.google.com/android/repository/android-ndk-r20-linux-x86_64.zip &&
@@ -145,8 +145,8 @@ install:
     fi
 
   - if [[ "${SPEC}" = "macx-clang" ]]; then
-        wget --quiet https://s3.amazonaws.com/downloads.bluerobotics.com/QGC/dependencies/gstreamer-1.18.1.tar.gz &&
-        sudo tar zxf gstreamer-1.18.1.tar.gz -C /Library/Frameworks
+        wget --quiet https://qgroundcontrol.s3-us-west-2.amazonaws.com/dependencies/gstreamer-osx-1.18.1.tar.bz2 &&
+        sudo tar zxf gstreamer-osx-1.18.1.tar.bz2 -C /Library/Frameworks
         ;
     fi
 
@@ -179,8 +179,9 @@ before_script:
         export CONFIG=release;
     fi
 
-  # insert QGC version in AndroidManifest.xml
-  - if [ "${SPEC}" = "android-clang" ]; then
+  # Update QGC version in AndroidManifest.xml based on git tag. We do not do this on pull requests
+  # since it is likely the tags out out of date on the pull and may cause an error.
+  - if [ "${SPEC}" = "android-clang"  && "${TRAVIS_PULL_REQUEST}" = "false" ]]; then
         git remote set-branches origin 'master' &&
         git fetch --tags origin master &&
         ./tools/update_android_version.sh ${BITNESS} ${TRAVIS_BRANCH};

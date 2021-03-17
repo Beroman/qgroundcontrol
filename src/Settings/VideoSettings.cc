@@ -28,6 +28,7 @@ const char* VideoSettings::videoSourceTCP               = "TCP-MPEG2 Video Strea
 const char* VideoSettings::videoSourceMPEGTS            = "MPEG-TS (h.264) Video Stream";
 const char* VideoSettings::videoSource3DRSolo           = "3DR Solo (requires restart)";
 const char* VideoSettings::videoSourceParrotDiscovery   = "Parrot Discovery";
+const char* VideoSettings::videoSourceYuneecMantisG     = "Yuneec Mantis G";
 
 DECLARE_SETTINGGROUP(Video, "Video")
 {
@@ -45,6 +46,7 @@ DECLARE_SETTINGGROUP(Video, "Video")
     videoSourceList.append(videoSourceMPEGTS);
     videoSourceList.append(videoSource3DRSolo);
     videoSourceList.append(videoSourceParrotDiscovery);
+    videoSourceList.append(videoSourceYuneecMantisG);
 #endif
 #ifndef QGC_DISABLE_UVC
     QList<QCameraInfo> cameras = QCameraInfo::availableCameras();
@@ -67,8 +69,14 @@ DECLARE_SETTINGGROUP(Video, "Video")
     const QVariantList removeForceVideoDecodeList{
 #ifdef Q_OS_LINUX
         VideoDecoderOptions::ForceVideoDecoderDirectX3D,
+        VideoDecoderOptions::ForceVideoDecoderVideoToolbox,
 #endif
 #ifdef Q_OS_WIN
+        VideoDecoderOptions::ForceVideoDecoderVAAPI,
+        VideoDecoderOptions::ForceVideoDecoderVideoToolbox,
+#endif
+#ifdef Q_OS_MAC
+        VideoDecoderOptions::ForceVideoDecoderDirectX3D,
         VideoDecoderOptions::ForceVideoDecoderVAAPI,
 #endif
     };
@@ -125,13 +133,13 @@ DECLARE_SETTINGSFACT_NO_FUNC(VideoSettings, forceVideoDecoder)
         _forceVideoDecoderFact = _createSettingsFact(forceVideoDecoderName);
 
         _forceVideoDecoderFact->setVisible(
-#ifdef Q_OS_LINUX
-            true
-#else
-#ifdef Q_OS_WIN
-            true
-#else
+#ifdef Q_OS_IOS
             false
+#else
+#ifdef Q_OS_ANDROID
+            false
+#else
+            true
 #endif
 #endif
         );

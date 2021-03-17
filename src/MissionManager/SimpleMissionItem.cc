@@ -174,7 +174,7 @@ void SimpleMissionItem::_connectSignals(void)
     connect(&_missionItem._param4Fact,          &Fact::valueChanged,                        this, &SimpleMissionItem::_possibleVehicleYawChanged);
 
     // Exit coordinate is the same as entrance coordinate
-    connect(this,                               &SimpleMissionItem::coordinateChanged,      this, &SimpleMissionItem::exitCoordinate);
+    connect(this,                               &SimpleMissionItem::coordinateChanged,      this, &SimpleMissionItem::exitCoordinateChanged);
 
     // The following changes may also change friendlyEditAllowed
     connect(&_missionItem._autoContinueFact,    &Fact::valueChanged,                        this, &SimpleMissionItem::_sendFriendlyEditAllowedChanged);
@@ -674,7 +674,9 @@ void SimpleMissionItem::_altitudeChanged(void)
     if (_altitudeMode == QGroundControlQmlGlobal::AltitudeModeAboveTerrain || _altitudeMode == QGroundControlQmlGlobal::AltitudeModeTerrainFrame) {
         _amslAltAboveTerrainFact.setRawValue(qQNaN());
         _terrainAltChanged();
-    } else {
+    }
+
+    if (_altitudeMode != QGroundControlQmlGlobal::AltitudeModeAboveTerrain) {
         _missionItem._param7Fact.setRawValue(_altitudeFact.rawValue());
     }
 }

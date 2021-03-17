@@ -15,6 +15,7 @@
 #include "SettingsManager.h"
 #include "KMLPlanDomDocument.h"
 #include "QmlObjectListModel.h"
+#include "FlightPathSegment.h"
 
 #include <QSettings>
 
@@ -107,8 +108,8 @@ signals:
     void greatestDistanceToChanged  (void);
     void presetNamesChanged         (void);
     void isIncompleteChanged        (void);
-    void minAMSLAltitudeChanged     (double minAMSLAltitude);
-    void maxAMSLAltitudeChanged     (double maxAMSLAltitude);
+    void minAMSLAltitudeChanged     (void);
+    void maxAMSLAltitudeChanged     (void);
     void terrainCollisionChanged    (bool terrainCollision);
 
 protected slots:
@@ -117,7 +118,7 @@ protected slots:
 protected:
     void        _savePresetJson         (const QString& name, QJsonObject& presetObject);
     QJsonObject _loadPresetJson         (const QString& name);
-    void        _appendFlightPathSegment(const QGeoCoordinate& coord1, double coord1AMSLAlt, const QGeoCoordinate& coord2, double coord2AMSLAlt);
+    void        _appendFlightPathSegment(FlightPathSegment::SegmentType segmentType, const QGeoCoordinate& coord1, double coord1AMSLAlt, const QGeoCoordinate& coord2, double coord2AMSLAlt);
 
     bool                _isIncomplete =                 true;
     int                 _cTerrainCollisionSegments =    0;

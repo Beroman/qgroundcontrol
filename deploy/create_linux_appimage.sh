@@ -1,13 +1,14 @@
 #!/bin/bash
 
-set -Eeuxo pipefail # https://vaneyckt.io/posts/safer_bash_scripts_with_set_euxo_pipefail/
+# This is causing master builds to fail. I'll figure it out once I get Stable out.
+#set -Eeuxo pipefail # https://vaneyckt.io/posts/safer_bash_scripts_with_set_euxo_pipefail/
 
 if [[ $# -eq 0 ]]; then
   echo 'create_linux_appimage.sh QGC_SRC_DIR QGC_RELEASE_DIR'
   exit 1
 fi
 
-QGC_SRC=$1
+QGC_SRC=$(readlink -f $1)
 
 QGC_CUSTOM_APP_NAME="${QGC_CUSTOM_APP_NAME:-QGroundControl}"
 QGC_CUSTOM_GENERIC_NAME="${QGC_CUSTOM_GENERIC_NAME:-Ground Control Station}"
@@ -21,13 +22,14 @@ if [ ! -f ${QGC_SRC}/qgroundcontrol.pro ]; then
   exit 1
 fi
 
-QGC_RELEASE_DIR=$2
+QGC_RELEASE_DIR=$(readlink -f $2)
 if [ ! -f ${QGC_RELEASE_DIR}/${QGC_CUSTOM_BINARY_NAME} ]; then
   echo "please specify path to ${QGC_CUSTOM_BINARY_NAME} release as the 2nd argument"
   exit 1
 fi
 
 OUTPUT_DIR=${3-`pwd`}
+OUTPUT_DIR=$(readlink -f $OUTPUT_DIR)
 echo "Output directory:" ${OUTPUT_DIR}
 
 # Generate AppImage using the binaries currently provided by the project.
@@ -81,10 +83,11 @@ echo ${QGC_CUSTOM_APP_NAME} Version: ${VERSION}
 
 # Go out of AppImage
 cd ${TMPDIR}
-wget -c --quiet "https://github.com/probonopd/AppImageKit/releases/download/5/AppImageAssistant" # (64-bit)
-chmod a+x ./AppImageAssistant
+wget -c --quiet "https://github.com/AppImage/AppImageKit/releases/download/12/appimagetool-x86_64.AppImage"
+chmod a+x ./appimagetool-x86_64.AppImage
 
-./AppImageAssistant ./$APP.AppDir/ ${TMPDIR}/$APP".AppImage"
+./appimagetool-x86_64.AppImage ./$APP.AppDir/ ${TMPDIR}/$APP".AppImage"
 
+mkdir -p ${OUTPUT_DIR}
 cp ${TMPDIR}/$APP".AppImage" ${OUTPUT_DIR}/$APP".AppImage"
 

@@ -10,12 +10,14 @@
 #include "ComponentInformationManager.h"
 #include "Vehicle.h"
 #include "FTPManager.h"
-#include "QGCZlib.h"
+#include "QGCLZMA.h"
 #include "JsonHelper.h"
 #include "CompInfoVersion.h"
 #include "CompInfoParam.h"
 #include "QGCFileDownload.h"
 #include "QGCApplication.h"
+#include "SettingsManager.h"
+#include "AppSettings.h"
 
 #include <QStandardPaths>
 #include <QJsonDocument>
@@ -184,6 +186,9 @@ void RequestMetaDataTypeStateMachine::_stateRequestCompInfo(StateMachine* stateM
     if (weakLink.expired()) {
         qCDebug(ComponentInformationManagerLog) << QStringLiteral("_stateRequestCompInfo Skipping component information %1 request due to no primary link").arg(requestMachine->typeToString());
         stateMachine->advance();
+    } else if (!qgcApp()->toolbox()->settingsManager()->appSettings()->useComponentInformationQuery()->rawValue().toBool()) {
+        qCDebug(ComponentInformationManagerLog) << QStringLiteral("_stateRequestCompInfo Skipping component information %1 request due to application setting").arg(requestMachine->typeToString());
+        stateMachine->advance();
     } else {
         SharedLinkInterfacePtr sharedLink = weakLink.lock();
         if (sharedLink->linkConfiguration()->isHighLatency() || sharedLink->isPX4Flow() || sharedLink->isLogReplay()) {
@@ -205,9 +210,9 @@ QString RequestMetaDataTypeStateMachine::_downloadCompleteJsonWorker(const QStri
 {
     QString outputFileName = fileName;
 
-    if (fileName.endsWith(".gz", Qt::CaseInsensitive)) {
+    if (fileName.endsWith(".lzma", Qt::CaseInsensitive) || fileName.endsWith(".xz", Qt::CaseInsensitive)) {
         outputFileName = (QDir(QStandardPaths::writableLocation(QStandardPaths::TempLocation)).absoluteFilePath(inflatedFileName));
-        if (QGCZlib::inflateGzipFile(fileName, outputFileName)) {
+        if (QGCLZMA::inflateLZMAFile(fileName, outputFileName)) {
             QFile(fileName).remove();
         } else {
             qCWarning(ComponentInformationManagerLog) << "Inflate of compressed json failed" << inflatedFileName;

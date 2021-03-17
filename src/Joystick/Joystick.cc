@@ -39,7 +39,6 @@ const char* Joystick::_multiRotorTXModeSettingsKey =    "TXMode_MultiRotor";
 const char* Joystick::_roverTXModeSettingsKey =         "TXMode_Rover";
 const char* Joystick::_vtolTXModeSettingsKey =          "TXMode_VTOL";
 const char* Joystick::_submarineTXModeSettingsKey =     "TXMode_Submarine";
-const char* Joystick::_gimbalSettingsKey =              "GimbalEnabled";
 
 const char* Joystick::_buttonActionNone =               QT_TR_NOOP("No Action");
 const char* Joystick::_buttonActionArm =                QT_TR_NOOP("Arm");
@@ -122,10 +121,17 @@ Joystick::Joystick(const QString& name, int axisCount, int buttonCount, int hatC
     connect(_multiVehicleManager, &MultiVehicleManager::activeVehicleChanged, this, &Joystick::_activeVehicleChanged);
 }
 
-Joystick::~Joystick()
+void Joystick::stop()
 {
     _exitThread = true;
     wait();
+}
+
+Joystick::~Joystick()
+{
+    if (!_exitThread) {
+        qWarning() << "Joystick thread still running!";
+    }
     delete[] _rgAxisValues;
     delete[] _rgCalibration;
     delete[] _rgButtonValues;
@@ -232,7 +238,6 @@ void Joystick::_loadSettings()
     _axisFrequencyHz    = settings.value(_axisFrequencySettingsKey,     _defaultAxisFrequencyHz).toFloat();
     _buttonFrequencyHz  = settings.value(_buttonFrequencySettingsKey,   _defaultButtonFrequencyHz).toFloat();
     _circleCorrection   = settings.value(_circleCorrectionSettingsKey,  false).toBool();
-    _gimbalEnabled      = settings.value(_gimbalSettingsKey,            false).toBool();
 
     _throttleMode   = static_cast<ThrottleMode_t>(settings.value(_throttleModeSettingsKey, ThrottleModeDownZero).toInt(&convertOk));
     badSettings |= !convertOk;
@@ -336,7 +341,6 @@ void Joystick::_saveSettings()
     settings.setValue(_axisFrequencySettingsKey,    _axisFrequencyHz);
     settings.setValue(_buttonFrequencySettingsKey,  _buttonFrequencyHz);
     settings.setValue(_throttleModeSettingsKey,     _throttleMode);
-    settings.setValue(_gimbalSettingsKey,           _gimbalEnabled);
     settings.setValue(_circleCorrectionSettingsKey, _circleCorrection);
 
     qCDebug(JoystickLog) << "_saveSettings calibrated:throttlemode:deadband:txmode" << _calibrated << _throttleMode << _deadband << _circleCorrection << _transmitterMode;
@@ -668,12 +672,6 @@ void Joystick::_handleAxis()
             }
             uint16_t shortButtons = static_cast<uint16_t>(buttonPressedBits & 0xFFFF);
             _activeVehicle->sendJoystickDataThreadSafe(roll, pitch, yaw, throttle, shortButtons);
-            emit axisValues(roll, -pitch, yaw, throttle); // Used by joystick cal screen
-            if(_activeVehicle && _axisCount > 4 && _gimbalEnabled) {
-                //-- TODO: There is nothing consuming this as there are no messages to handle gimbal
-                //   the way MANUAL_CONTROL handles the other channels.
-                emit manualControlGimbal((gimbalPitch + 1.0f) / 2.0f * 90.0f, gimbalYaw * 180.0f);
-            }
         }
     }
 }
@@ -873,7 +871,7 @@ void Joystick::setThrottleMode(int mode)
     emit throttleModeChanged(_throttleMode);
 }
 
-bool Joystick::negativeThrust()
+bool Joystick::negativeThrust() const
 {
     return _negativeThrust;
 }
@@ -888,7 +886,7 @@ void Joystick::setNegativeThrust(bool allowNegative)
     emit negativeThrustChanged(_negativeThrust);
 }
 
-float Joystick::exponential()
+float Joystick::exponential() const
 {
     return _exponential;
 }
@@ -900,7 +898,7 @@ void Joystick::setExponential(float expo)
     emit exponentialChanged(_exponential);
 }
 
-bool Joystick::accumulator()
+bool Joystick::accumulator() const
 {
     return _accumulator;
 }
@@ -912,7 +910,7 @@ void Joystick::setAccumulator(bool accu)
     emit accumulatorChanged(_accumulator);
 }
 
-bool Joystick::deadband()
+bool Joystick::deadband() const
 {
     return _deadband;
 }
@@ -923,7 +921,7 @@ void Joystick::setDeadband(bool deadband)
     _saveSettings();
 }
 
-bool Joystick::circleCorrection()
+bool Joystick::circleCorrection() const
 {
     return _circleCorrection;
 }
@@ -933,13 +931,6 @@ void Joystick::setCircleCorrection(bool circleCorrection)
     _circleCorrection = circleCorrection;
     _saveSettings();
     emit circleCorrectionChanged(_circleCorrection);
-}
-
-void Joystick::setGimbalEnabled(bool set)
-{
-    _gimbalEnabled = set;
-    _saveSettings();
-    emit gimbalEnabledChanged();
 }
 
 void Joystick::setAxisFrequency(float val)
@@ -1050,7 +1041,7 @@ void Joystick::_yawStep(int direction)
     emit gimbalControlValue(_localPitch, _localYaw);
 }
 
-bool Joystick::_validAxis(int axis)
+bool Joystick::_validAxis(int axis) const
 {
     if(axis >= 0 && axis < _axisCount) {
         return true;
@@ -1059,7 +1050,7 @@ bool Joystick::_validAxis(int axis)
     return false;
 }
 
-bool Joystick::_validButton(int button)
+bool Joystick::_validButton(int button) const
 {
     if(button >= 0 && button < _totalButtonCount)
         return true;
