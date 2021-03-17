@@ -619,6 +619,7 @@ void SimpleMissionItem::setDirty(bool dirty)
         if (!dirty) {
             _cameraSection->setDirty(false);
             _speedSection->setDirty(false);
+            _ledSection->setDirty(false);
         }
         emit dirtyChanged(dirty);
     }
@@ -857,6 +858,9 @@ bool SimpleMissionItem::scanForSections(QmlObjectListModel* visualItems, int sca
     if (_speedSection->available()) {
         sectionFound |= _speedSection->scanForSection(visualItems, scanIndex);
     }
+    if (_ledSection->available()) {
+        sectionFound |= _ledSection->scanForSection(visualItems, scanIndex);
+    }
 
     return sectionFound;
 }
@@ -872,6 +876,10 @@ void SimpleMissionItem::_updateOptionalSections(void)
         _speedSection->deleteLater();
         _speedSection = nullptr;
     }
+    if (_ledSection) {
+        _ledSection->deleteLater();
+        _ledSection = nullptr;
+    }
 
     // Add new sections
 
@@ -880,7 +888,9 @@ void SimpleMissionItem::_updateOptionalSections(void)
     if (static_cast<MAV_CMD>(command()) == MAV_CMD_NAV_WAYPOINT) {
         _cameraSection->setAvailable(true);
         _speedSection->setAvailable(true);
+        _ledSection->setAvailable(true);
     }
+    _ledSection = new LEDSection(_masterController, this);
 
     connect(_cameraSection, &CameraSection::dirtyChanged,                   this, &SimpleMissionItem::_sectionDirtyChanged);
     connect(_cameraSection, &CameraSection::itemCountChanged,               this, &SimpleMissionItem::_updateLastSequenceNumber);
@@ -895,12 +905,15 @@ void SimpleMissionItem::_updateOptionalSections(void)
 
     emit cameraSectionChanged(_cameraSection);
     emit speedSectionChanged(_speedSection);
+    emit ledSectionChanged(_ledSection);
     emit lastSequenceNumberChanged(lastSequenceNumber());
 }
 
 int SimpleMissionItem::lastSequenceNumber(void) const
 {
-    return sequenceNumber() + (_cameraSection ? _cameraSection->itemCount() : 0) + (_speedSection ? _speedSection->itemCount() : 0);
+    return sequenceNumber() + (_cameraSection ? _cameraSection->itemCount() : 0)
+                            + (_speedSection  ? _speedSection->itemCount()  : 0)
+                            + (_ledSection    ? _ledSection->itemCount()    : 0);
 }
 
 void SimpleMissionItem::_updateLastSequenceNumber(void)

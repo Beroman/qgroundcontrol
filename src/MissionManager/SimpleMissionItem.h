@@ -16,6 +16,7 @@
 #include "MissionCommandTree.h"
 #include "CameraSection.h"
 #include "SpeedSection.h"
+#include "LEDSection.h"
 #include "QGroundControlQmlGlobal.h"
 
 /// A SimpleMissionItem is used to represent a single MissionItem to the ui.
@@ -73,6 +74,7 @@ public:
 
     CameraSection*  cameraSection       (void) { return _cameraSection; }
     SpeedSection*   speedSection        (void) { return _speedSection; }
+    LEDSection*     ledSection          (void) { return _ledSection; }
 
     QmlObjectListModel* textFieldFacts  (void) { return &_textFieldFacts; }
     QmlObjectListModel* nanFacts        (void) { return &_nanFacts; }
@@ -135,7 +137,8 @@ signals:
     void headingDegreesChanged      (double heading);
     void rawEditChanged             (bool rawEdit);
     void cameraSectionChanged       (QObject* cameraSection);
-    void speedSectionChanged        (QObject* cameraSection);
+    void speedSectionChanged        (QObject* speedSection);
+    void ledSectionChanged          (QObject* ledSection);
     void altitudeModeChanged        (void);
 
 private slots:
@@ -167,8 +170,9 @@ private:
     bool            _dirty =                    false;
     bool            _ignoreDirtyChangeSignals = false;
     QGeoCoordinate  _mapCenterHint;
-    SpeedSection*   _speedSection =             nullptr;
+    SpeedSection*   _speedSection  =             nullptr;
     CameraSection*  _cameraSection =             nullptr;
+    LEDSection*     _ledSection    =             nullptr;
 
     MissionCommandTree* _commandTree = nullptr;
     bool _syncingHeadingDegreesAndParam4 = false;   ///< true: already in a sync signal, prevents signal loop

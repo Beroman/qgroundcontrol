@@ -592,6 +592,7 @@ HEADERS += \
     src/MissionManager/GeoFenceManager.h \
     src/MissionManager/KMLPlanDomDocument.h \
     src/MissionManager/LandingComplexItem.h \
+    src/MissionManager/LEDSection.h \
     src/MissionManager/MissionCommandList.h \
     src/MissionManager/MissionCommandTree.h \
     src/MissionManager/MissionCommandUIInfo.h \
@@ -827,6 +828,7 @@ SOURCES += \
     src/MissionManager/GeoFenceManager.cc \
     src/MissionManager/KMLPlanDomDocument.cc \
     src/MissionManager/LandingComplexItem.cc \
+    src/MissionManager/LEDSection.cc \
     src/MissionManager/MissionCommandList.cc \
     src/MissionManager/MissionCommandTree.cc \
     src/MissionManager/MissionCommandUIInfo.cc \
