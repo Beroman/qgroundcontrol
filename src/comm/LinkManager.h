@@ -13,6 +13,8 @@
 #include <QMultiMap>
 #include <QMutex>
 
+#include <limits>
+
 #include "LinkConfiguration.h"
 #include "LinkInterface.h"
 #include "QGCLoggingCategory.h"
@@ -112,8 +114,12 @@ public:
     // Override from QGCTool
     virtual void setToolbox(QGCToolbox *toolbox);
 
-    /// @return This mavlink channel is never assigned to a vehicle.
-    uint8_t reservedMavlinkChannel(void) { return 0; }
+    static constexpr uint8_t invalidMavlinkChannel(void) { return std::numeric_limits<uint8_t>::max(); }
+
+    /// Allocates a mavlink channel for use
+    /// @return Mavlink channel index, invalidMavlinkChannel() for no channels available
+    uint8_t allocateMavlinkChannel(void);
+    void freeMavlinkChannel(uint8_t channel);
 
     /// If you are going to hold a reference to a LinkInterface* in your object you must reference count it
     /// by using this method to get access to the shared pointer.
@@ -125,12 +131,15 @@ public:
 
     void startAutoConnectedLinks(void);
 
+<<<<<<< HEAD
     /// Reserves a mavlink channel for use
     /// @return Mavlink channel index, 0 for no channels available
     int _reserveMavlinkChannel(void);
 
     void connectRTKViaTcp(bool connect = true);
 
+=======
+>>>>>>> master
     static const char*  settingsGroup;
 
 signals:
@@ -149,7 +158,6 @@ private:
     void                _removeConfiguration        (LinkConfiguration* config);
     void                _addUDPAutoConnectLink      (void);
     void                _addMAVLinkForwardingLink   (void);
-    void                _freeMavlinkChannel         (int channel);
     bool                _isSerialPortConnected      (void);
 
 #ifndef NO_SERIAL_LINK
