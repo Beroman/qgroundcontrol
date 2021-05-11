@@ -42,6 +42,7 @@ public:
     /// Optional sections
     Q_PROPERTY(QObject*         speedSection            READ speedSection                                       NOTIFY speedSectionChanged)
     Q_PROPERTY(QObject*         cameraSection           READ cameraSection                                      NOTIFY cameraSectionChanged)
+    Q_PROPERTY(QObject*         ledSection              READ ledSection                                         NOTIFY ledSectionChanged)
 
     // These properties are used to display the editing ui
     Q_PROPERTY(QmlObjectListModel*  comboboxFacts   READ comboboxFacts  CONSTANT)

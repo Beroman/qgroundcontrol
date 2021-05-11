@@ -116,5 +116,6 @@ void QGCLoggingCategoryRegister::setFilterRulesFromSettings(const QString& comma
     filterRules += filterRuleFormat.arg("GStreamerAPILog");
 
     qDebug() << "Filter rules" << filterRules;
-    QLoggingCategory::setFilterRules(filterRules);
+    QLoggingCategory::setFilterRules(filterRules + "\nqt.qml.connections.warning=false");
+
 }

@@ -887,12 +887,12 @@ void SimpleMissionItem::_updateOptionalSections(void)
 
     _cameraSection = new CameraSection(_masterController, this);
     _speedSection = new SpeedSection(_masterController, this);
+    _ledSection = new LEDSection(_masterController, this);
     if (static_cast<MAV_CMD>(command()) == MAV_CMD_NAV_WAYPOINT) {
         _cameraSection->setAvailable(true);
         _speedSection->setAvailable(true);
         _ledSection->setAvailable(true);
     }
-    _ledSection = new LEDSection(_masterController, this);
 
     connect(_cameraSection, &CameraSection::dirtyChanged,                   this, &SimpleMissionItem::_sectionDirtyChanged);
     connect(_cameraSection, &CameraSection::itemCountChanged,               this, &SimpleMissionItem::_updateLastSequenceNumber);
@@ -904,6 +904,10 @@ void SimpleMissionItem::_updateOptionalSections(void)
     connect(_speedSection,  &SpeedSection::dirtyChanged,                this, &SimpleMissionItem::_sectionDirtyChanged);
     connect(_speedSection,  &SpeedSection::itemCountChanged,            this, &SimpleMissionItem::_updateLastSequenceNumber);
     connect(_speedSection,  &SpeedSection::specifiedFlightSpeedChanged, this, &SimpleMissionItem::specifiedFlightSpeedChanged);
+
+    connect(_ledSection,    &LEDSection::dirtyChanged,                this, &SimpleMissionItem::_sectionDirtyChanged);
+    connect(_ledSection,    &LEDSection::itemCountChanged,            this, &SimpleMissionItem::_updateLastSequenceNumber);
+    connect(_ledSection,    &LEDSection::specifiedColorChanged,       this, &SimpleMissionItem::specifiedFlightSpeedChanged);
 
     emit cameraSectionChanged(_cameraSection);
     emit speedSectionChanged(_speedSection);
@@ -939,6 +943,7 @@ void SimpleMissionItem::appendMissionItems(QList<MissionItem*>& items, QObject* 
 
     _cameraSection->appendSectionItems(items, missionItemParent, seqNum);
     _speedSection->appendSectionItems(items, missionItemParent, seqNum);
+    _ledSection->appendSectionItems(items, missionItemParent, seqNum);
 }
 
 void SimpleMissionItem::applyNewAltitude(double newAltitude)
@@ -974,6 +979,10 @@ void SimpleMissionItem::setMissionFlightStatus(MissionController::MissionFlightS
         if (!qIsNaN(missionFlightStatus.gimbalPitch) && !QGC::fuzzyCompare(_cameraSection->gimbalPitch()->rawValue().toDouble(), missionFlightStatus.gimbalPitch)) {
             _cameraSection->gimbalPitch()->setRawValue(missionFlightStatus.gimbalPitch);
         }
+    }
+    if (_ledSection->available() && !_ledSection->specifyColor() && !QGC::fuzzyCompare(_ledSection->color()->rawValue().toUInt(), missionFlightStatus.ledColor))
+    {
+        _ledSection->color()->setRawValue(missionFlightStatus.ledColor);
     }
 }
 

@@ -16,6 +16,7 @@
 #include "QGCLoggingCategory.h"
 #include "CameraSection.h"
 #include "SpeedSection.h"
+#include "LEDSection.h"
 
 Q_DECLARE_LOGGING_CATEGORY(MissionSettingsItemLog)
 
@@ -31,10 +32,12 @@ public:
     Q_PROPERTY(Fact*    plannedHomePositionAltitude READ plannedHomePositionAltitude                            CONSTANT)
     Q_PROPERTY(QObject* cameraSection               READ cameraSection                                          CONSTANT)
     Q_PROPERTY(QObject* speedSection                READ speedSection                                           CONSTANT)
+    Q_PROPERTY(QObject* ledSection                  READ ledSection                                             CONSTANT)
 
     Fact*           plannedHomePositionAltitude (void) { return &_plannedHomePositionAltitudeFact; }
     CameraSection*  cameraSection               (void) { return &_cameraSection; }
     SpeedSection*   speedSection                (void) { return &_speedSection; }
+    LEDSection*     ledSection                  (void) { return &_ledSection; }
 
     /// Scans the loaded items for settings items
     bool scanForMissionSettings(QmlObjectListModel* visualItems, int scanIndex);
@@ -114,6 +117,7 @@ private:
     bool            _plannedHomePositionMovedByUser =   false;
     CameraSection   _cameraSection;
     SpeedSection    _speedSection;
+    LEDSection      _ledSection;
 
     static QMap<QString, FactMetaData*> _metaDataMap;
 

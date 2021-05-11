@@ -31,6 +31,7 @@ MissionSettingsItem::MissionSettingsItem(PlanMasterController* masterController,
     , _plannedHomePositionAltitudeFact  (0, _plannedHomePositionAltitudeName,   FactMetaData::valueTypeDouble)
     , _cameraSection                    (masterController)
     , _speedSection                     (masterController)
+    , _ledSection                       (masterController)
 {
     _isIncomplete = false;
     _editorQml = "qrc:/qml/MissionSettingsEditor.qml";
@@ -52,9 +53,11 @@ MissionSettingsItem::MissionSettingsItem(PlanMasterController* masterController,
     connect(this,               &MissionSettingsItem::terrainAltitudeChanged,           this, &MissionSettingsItem::_setHomeAltFromTerrain);
     connect(&_cameraSection,    &CameraSection::dirtyChanged,                           this, &MissionSettingsItem::_sectionDirtyChanged);
     connect(&_speedSection,     &SpeedSection::dirtyChanged,                            this, &MissionSettingsItem::_sectionDirtyChanged);
+    connect(&_ledSection,       &LEDSection::dirtyChanged,                              this, &MissionSettingsItem::_sectionDirtyChanged);
     connect(&_cameraSection,    &CameraSection::specifiedGimbalYawChanged,              this, &MissionSettingsItem::specifiedGimbalYawChanged);
     connect(&_cameraSection,    &CameraSection::specifiedGimbalPitchChanged,            this, &MissionSettingsItem::specifiedGimbalPitchChanged);
     connect(&_speedSection,     &SpeedSection::specifiedFlightSpeedChanged,             this, &MissionSettingsItem::specifiedFlightSpeedChanged);
+    connect(&_ledSection,       &LEDSection::specifiedColorChanged,                     this, &MissionSettingsItem::specifiedFlightSpeedChanged);
     connect(this,               &MissionSettingsItem::coordinateChanged,                this, &MissionSettingsItem::_amslEntryAltChanged);
     connect(this,               &MissionSettingsItem::amslEntryAltChanged,              this, &MissionSettingsItem::amslExitAltChanged);
     connect(this,               &MissionSettingsItem::amslEntryAltChanged,              this, &MissionSettingsItem::minAMSLAltitudeChanged);

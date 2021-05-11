@@ -68,6 +68,7 @@ public:
         double                      cruiseSpeed;
         double                      hoverSpeed;
         double                      vehicleSpeed;           ///< Either cruise or hover speed based on vehicle type and vtol state
+        quint32                     ledColor;
     } MissionFlightStatus_t;
 
     Q_PROPERTY(QmlObjectListModel*  visualItems                     READ visualItems                    NOTIFY visualItemsChanged)

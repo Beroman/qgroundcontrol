@@ -328,6 +328,11 @@ Rectangle {
                 checked:    missionItem.cameraSection.settingsSpecified
                 visible:    missionItem.cameraSection.available
             }
+
+            LEDSection {
+                checked:    missionItem.ledSection.settingsSpecified
+                visible:    missionItem.ledSection.available
+            }
         }
     }
 }
