@@ -3925,7 +3925,7 @@ void Vehicle::setColor(qreal r, qreal g, qreal b)
 //                   toPVM(b)); // PVM
 
     sendMavCommand(defaultComponentId(),
-                   MAV_CMD_SET_LED_RGB,
+                   MAV_CMD_SET_LED_RGB,   ///44000
                    false,        // show error
                    r,    // r
                    g,   //g
