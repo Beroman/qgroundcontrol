@@ -12,7 +12,7 @@
 #include <QLocale>
 #include <QQuaternion>
 
-#include <Eigen/Eigen>
+//#include <Eigen/Eigen>
 
 #include "Vehicle.h"
 #include "MAVLinkProtocol.h"
@@ -579,6 +579,8 @@ void Vehicle::resetCounters()
 
 void Vehicle::_mavlinkMessageReceived(LinkInterface* link, mavlink_message_t message)
 {
+    qDebug() << "\n _mavlinkMessageReceived message.msgid = " << message.msgid;
+
     // If the link is already running at Mavlink V2 set our max proto version to it.
     unsigned mavlinkVersion = _mavlink->getCurrentVersion();
     if (_maxProtoVersion != mavlinkVersion && mavlinkVersion >= 200) {
@@ -1024,29 +1026,30 @@ void Vehicle::_handleAttitude(mavlink_message_t& message)
 void Vehicle::_handleAttitudeQuaternion(mavlink_message_t& message)
 {
     _receivingAttitudeQuaternion = true;
+    Q_UNUSED(message);
 
-    mavlink_attitude_quaternion_t attitudeQuaternion;
-    mavlink_msg_attitude_quaternion_decode(&message, &attitudeQuaternion);
+//    mavlink_attitude_quaternion_t attitudeQuaternion;
+//    mavlink_msg_attitude_quaternion_decode(&message, &attitudeQuaternion);
 
-    Eigen::Quaternionf quat(attitudeQuaternion.q1, attitudeQuaternion.q2, attitudeQuaternion.q3, attitudeQuaternion.q4);
-    Eigen::Vector3f rates(attitudeQuaternion.rollspeed, attitudeQuaternion.pitchspeed, attitudeQuaternion.yawspeed);
-    Eigen::Quaternionf repr_offset(attitudeQuaternion.repr_offset_q[0], attitudeQuaternion.repr_offset_q[1], attitudeQuaternion.repr_offset_q[2], attitudeQuaternion.repr_offset_q[3]);
+//    Eigen::Quaternionf quat(attitudeQuaternion.q1, attitudeQuaternion.q2, attitudeQuaternion.q3, attitudeQuaternion.q4);
+//    Eigen::Vector3f rates(attitudeQuaternion.rollspeed, attitudeQuaternion.pitchspeed, attitudeQuaternion.yawspeed);
+//    Eigen::Quaternionf repr_offset(attitudeQuaternion.repr_offset_q[0], attitudeQuaternion.repr_offset_q[1], attitudeQuaternion.repr_offset_q[2], attitudeQuaternion.repr_offset_q[3]);
 
-    // if repr_offset is valid, rotate attitude and rates
-    if (repr_offset.norm() >= 0.5f) {
-        quat = quat * repr_offset;
-        rates = repr_offset * rates;
-    }
+//    // if repr_offset is valid, rotate attitude and rates
+//    if (repr_offset.norm() >= 0.5f) {
+//        quat = quat * repr_offset;
+//        rates = repr_offset * rates;
+//    }
 
-    float roll, pitch, yaw;
-    float q[] = { quat.w(), quat.x(), quat.y(), quat.z() };
-    mavlink_quaternion_to_euler(q, &roll, &pitch, &yaw);
+//    float roll, pitch, yaw;
+//    float q[] = { quat.w(), quat.x(), quat.y(), quat.z() };
+//    mavlink_quaternion_to_euler(q, &roll, &pitch, &yaw);
 
-    _handleAttitudeWorker(roll, pitch, yaw);
+//    _handleAttitudeWorker(roll, pitch, yaw);
 
-    rollRate()->setRawValue(qRadiansToDegrees(rates[0]));
-    pitchRate()->setRawValue(qRadiansToDegrees(rates[1]));
-    yawRate()->setRawValue(qRadiansToDegrees(rates[2]));
+//    rollRate()->setRawValue(qRadiansToDegrees(rates[0]));
+//    pitchRate()->setRawValue(qRadiansToDegrees(rates[1]));
+//    yawRate()->setRawValue(qRadiansToDegrees(rates[2]));
 }
 
 void Vehicle::_handleGpsRawInt(mavlink_message_t& message)
@@ -1055,6 +1058,10 @@ void Vehicle::_handleGpsRawInt(mavlink_message_t& message)
     mavlink_msg_gps_raw_int_decode(&message, &gpsRawInt);
 
     _gpsRawIntMessageAvailable = true;
+
+    qDebug() << "\n _handleGpsRawInt" << "lat =" << gpsRawInt.lat
+             << "lon =" << gpsRawInt.lon
+                << "alt =" << gpsRawInt.alt;
 
     if (gpsRawInt.fix_type >= GPS_FIX_TYPE_3D_FIX) {
         if (!_globalPositionIntMessageAvailable) {
@@ -3889,31 +3896,38 @@ void Vehicle::triggerSimpleCamera()
 }
 void Vehicle::setColor(qreal r, qreal g, qreal b)
 {
-    auto toPVM = [](int value) -> int {
-        const int COLOR_MAX = 255;
-        const int COLOR_MIN = 0;
+//    auto toPVM = [](int value) -> int {
+//        const int COLOR_MAX = 255;
+//        const int COLOR_MIN = 0;
 
-        const int PVM_MIN = 0;
-        const int PVM_MAX = 20000;
+//        const int PVM_MIN = 0;
+//        const int PVM_MAX = 20000;
 
-        int converted = PVM_MAX + (value - COLOR_MAX) * (PVM_MAX - PVM_MIN) / (COLOR_MAX - COLOR_MIN);
-        return converted;
-    };
-    qDebug() << "\n set Color" << r << g << b
-             << toPVM(r) << toPVM(g) << toPVM(b);
+//        int converted = PVM_MAX + (value - COLOR_MAX) * (PVM_MAX - PVM_MIN) / (COLOR_MAX - COLOR_MIN);
+//        return converted;
+//    };
+//    qDebug() << "\n set Color" << r << g << b
+//             << toPVM(r) << toPVM(g) << toPVM(b);
+//    sendMavCommand(defaultComponentId(),
+//                   MAV_CMD_DO_SET_SERVO,
+//                   false,        // show error
+//                   7,    // servo
+//                   toPVM(r)); // PVM
+//    sendMavCommand(defaultComponentId(),
+//                   MAV_CMD_DO_SET_SERVO,
+//                   false,        // show error
+//                   8,    // servo
+//                   toPVM(g)); // PVM
+//    sendMavCommand(defaultComponentId(),
+//                   MAV_CMD_DO_SET_SERVO,
+//                   false,        // show error
+//                   9,    // servo
+//                   toPVM(b)); // PVM
+
     sendMavCommand(defaultComponentId(),
-                   MAV_CMD_DO_SET_SERVO,
-                   true,        // show error
-                   7,    // servo
-                   toPVM(r)); // PVM
-    sendMavCommand(defaultComponentId(),
-                   MAV_CMD_DO_SET_SERVO,
-                   true,        // show error
-                   8,    // servo
-                   toPVM(g)); // PVM
-    sendMavCommand(defaultComponentId(),
-                   MAV_CMD_DO_SET_SERVO,
-                   true,        // show error
-                   9,    // servo
-                   toPVM(b)); // PVM
+                   MAV_CMD_SET_LED_RGB,
+                   false,        // show error
+                   r,    // r
+                   g,   //g
+                   b); // b
 }

@@ -204,9 +204,16 @@ void MAVLinkProtocol::receiveBytes(LinkInterface* link, QByteArray b)
     }
 
     uint8_t mavlinkChannel = link->mavlinkChannel();
+//    qDebug() << "\n receiveBytes mavlinkChannel = " << mavlinkChannel;
 
     for (int position = 0; position < b.size(); position++) {
+//        mavlink_message_t       _rxmsg;
+//        mavlink_status_t        _rxstatus;
+//        uint8_t msgReceived = mavlink_frame_char_buffer(&_rxmsg, &_rxstatus, static_cast<uint8_t>(b[position]), &_message, &_status);
+//        qDebug() << "\n receiveBytes msgReceived = " << msgReceived;
+//        if (msgReceived == MAVLINK_FRAMING_OK /*|| msgReceived == MAVLINK_FRAMING_BAD_CRC*/){
         if (mavlink_parse_char(mavlinkChannel, static_cast<uint8_t>(b[position]), &_message, &_status)) {
+            qDebug() << "\n receiveBytes message.msgid = " << _message.msgid;
             // Got a valid message
             if (!link->decodedFirstMavlinkPacket()) {
                 link->setDecodedFirstMavlinkPacket(true);

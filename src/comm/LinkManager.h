@@ -131,15 +131,8 @@ public:
 
     void startAutoConnectedLinks(void);
 
-<<<<<<< HEAD
-    /// Reserves a mavlink channel for use
-    /// @return Mavlink channel index, 0 for no channels available
-    int _reserveMavlinkChannel(void);
-
     void connectRTKViaTcp(bool connect = true);
 
-=======
->>>>>>> master
     static const char*  settingsGroup;
 
 signals:

@@ -173,6 +173,7 @@ void UDPLink::readBytes()
     if (!_socket) {
         return;
     }
+
     QByteArray databuffer;
     while (_socket->hasPendingDatagrams())
     {
@@ -183,6 +184,7 @@ void UDPLink::readBytes()
         // If the other end is reset then it will still report data available,
         // but will fail on the readDatagram call
         qint64 slen = _socket->readDatagram(datagram.data(), datagram.size(), &sender, &senderPort);
+//        qDebug() << "readBytes, slen = " << slen;
         if (slen == -1) {
             break;
         }
