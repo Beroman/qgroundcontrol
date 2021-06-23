@@ -251,6 +251,8 @@ void MAVLinkProtocol::receiveBytes(LinkInterface* link, QByteArray b)
                 } else {
                     lostMessages = _message.seq - expectedSeq;
                 }
+                qDebug() << "\n lost messages = " << lostMessages << " _message.sysid = " << _message.sysid << " _message.compid = " << _message.compid << " _message.msgid = " << _message.msgid;
+
                 // Log how many were lost
                 totalLossCounter[mavlinkChannel] += static_cast<uint64_t>(lostMessages);
             }
@@ -361,6 +363,7 @@ void MAVLinkProtocol::receiveBytes(LinkInterface* link, QByteArray b)
 
             // Update MAVLink status on every 32th packet
             if ((totalReceiveCounter[mavlinkChannel] & 0x1F) == 0) {
+                qDebug() << "\n mavlinkChannel = " << mavlinkChannel << " message.sysid = " << _message.sysid << " totalReceiveCounter = " << totalReceiveCounter[mavlinkChannel] << " totalLossCounter = " << totalLossCounter[mavlinkChannel] << " receiveLossPercent = " << receiveLossPercent;
                 emit mavlinkMessageStatus(_message.sysid, totalSent, totalReceiveCounter[mavlinkChannel], totalLossCounter[mavlinkChannel], receiveLossPercent);
             }
 

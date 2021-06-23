@@ -2705,6 +2705,7 @@ bool Vehicle::_sendMavCommandShouldRetry(MAV_CMD command)
     case MAV_CMD_REQUEST_PROTOCOL_VERSION:
     case MAV_CMD_REQUEST_MESSAGE:
     case MAV_CMD_PREFLIGHT_STORAGE:
+//    case MAV_CMD_SET_LED_RGB:
         return true;
 
     default:
@@ -2714,12 +2715,14 @@ bool Vehicle::_sendMavCommandShouldRetry(MAV_CMD command)
 
 void Vehicle::_sendMavCommandWorker(bool commandInt, bool requestMessage, bool showError, MavCmdResultHandler resultHandler, void* resultHandlerData, int targetCompId, MAV_CMD command, MAV_FRAME frame, float param1, float param2, float param3, float param4, float param5, float param6, float param7)
 {
-    int entryIndex = _findMavCommandListEntryIndex(targetCompId, command);
-    if ((entryIndex != -1 || targetCompId == MAV_COMP_ID_ALL) && command != MAV_CMD_DO_SET_SERVO) {
+    //we need to set LED color anyway
+    int entryIndex = command == MAV_CMD_SET_LED_RGB ? -1 : _findMavCommandListEntryIndex(targetCompId, command);
+    if ((entryIndex != -1 || targetCompId == MAV_COMP_ID_ALL)) {
         bool    compIdAll       = targetCompId == MAV_COMP_ID_ALL;
         QString rawCommandName  = _toolbox->missionCommandTree()->rawName(command);
 
-        qCDebug(VehicleLog) << QStringLiteral("_sendMavCommandWorker failing %1").arg(compIdAll ? "MAV_COMP_ID_ALL not supportded" : "duplicate command") << rawCommandName;
+//        qCDebug(VehicleLog) << QStringLiteral("_sendMavCommandWorker failing %1").arg(compIdAll ? "MAV_COMP_ID_ALL not supportded" : "duplicate command") << rawCommandName;
+        qDebug() << QStringLiteral("_sendMavCommandWorker failing %1").arg(compIdAll ? "MAV_COMP_ID_ALL not supportded" : "duplicate command") << rawCommandName;
 
         // If we send multiple versions of the same command to a component there is no way to discern which COMMAND_ACK we get back goes with which.
         // Because of this we fail in that case.
@@ -3930,4 +3933,5 @@ void Vehicle::setColor(qreal r, qreal g, qreal b)
                    r,    // r
                    g,   //g
                    b); // b
+        qDebug() << "\n set rgb Color " << r << " "<< g << " "<< b;
 }
