@@ -890,12 +890,12 @@ void SimpleMissionItem::_updateOptionalSections(void)
 
     _cameraSection = new CameraSection(_masterController, this);
     _speedSection = new SpeedSection(_masterController, this);
+    _ledSection = new LEDSection(_masterController, this);
     if (static_cast<MAV_CMD>(command()) == MAV_CMD_NAV_WAYPOINT) {
         _cameraSection->setAvailable(true);
         _speedSection->setAvailable(true);
         _ledSection->setAvailable(true);
     }
-    _ledSection = new LEDSection(_masterController, this);
 
     connect(_cameraSection, &CameraSection::dirtyChanged,                   this, &SimpleMissionItem::_sectionDirtyChanged);
     connect(_cameraSection, &CameraSection::itemCountChanged,               this, &SimpleMissionItem::_updateLastSequenceNumber);
@@ -907,6 +907,9 @@ void SimpleMissionItem::_updateOptionalSections(void)
     connect(_speedSection,  &SpeedSection::dirtyChanged,                this, &SimpleMissionItem::_sectionDirtyChanged);
     connect(_speedSection,  &SpeedSection::itemCountChanged,            this, &SimpleMissionItem::_updateLastSequenceNumber);
     connect(_speedSection,  &SpeedSection::specifiedFlightSpeedChanged, this, &SimpleMissionItem::specifiedFlightSpeedChanged);
+
+    connect(_ledSection,  &SpeedSection::dirtyChanged,     this, &SimpleMissionItem::_sectionDirtyChanged);
+    connect(_ledSection,  &SpeedSection::itemCountChanged, this, &SimpleMissionItem::_updateLastSequenceNumber);
 
     emit cameraSectionChanged(_cameraSection);
     emit speedSectionChanged(_speedSection);
@@ -942,6 +945,7 @@ void SimpleMissionItem::appendMissionItems(QList<MissionItem*>& items, QObject* 
 
     _cameraSection->appendSectionItems(items, missionItemParent, seqNum);
     _speedSection->appendSectionItems(items, missionItemParent, seqNum);
+    _ledSection->appendSectionItems(items, missionItemParent, seqNum);
 }
 
 void SimpleMissionItem::applyNewAltitude(double newAltitude)

@@ -1,0 +1,14 @@
+{
+    "version":      1,
+    "fileType":  "FactMetaData",
+    "QGC.MetaData.Facts":
+[
+{
+    "name":      "LEDColor",
+    "shortDesc": "Set the current LED color",
+    "type":      "uint32",
+    "min":       0,
+    "default":   0
+}
+]
+}

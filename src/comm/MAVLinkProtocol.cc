@@ -213,7 +213,13 @@ void MAVLinkProtocol::receiveBytes(LinkInterface* link, QByteArray b)
 //        qDebug() << "\n receiveBytes msgReceived = " << msgReceived;
 //        if (msgReceived == MAVLINK_FRAMING_OK /*|| msgReceived == MAVLINK_FRAMING_BAD_CRC*/){
         if (mavlink_parse_char(mavlinkChannel, static_cast<uint8_t>(b[position]), &_message, &_status)) {
-            qDebug() << "\n receiveBytes message.msgid = " << _message.msgid;
+
+            if (_message.sysid == 0){
+                memset(&_status,  0, sizeof(_status));
+                memset(&_message, 0, sizeof(_message));
+                break;
+            }
+//            qDebug() << "\n receiveBytes message.msgid = " << _message.msgid;
             // Got a valid message
             if (!link->decodedFirstMavlinkPacket()) {
                 link->setDecodedFirstMavlinkPacket(true);
@@ -230,6 +236,9 @@ void MAVLinkProtocol::receiveBytes(LinkInterface* link, QByteArray b)
             // MAVLink Status
             uint8_t lastSeq = lastIndex[_message.sysid][_message.compid];
             uint8_t expectedSeq = lastSeq + 1;
+
+            qDebug() << "\n lastSeq = " << lastSeq << " _message.seq = " << _message.seq;
+
             // Increase receive counter
             totalReceiveCounter[mavlinkChannel]++;
             // Determine what the next expected sequence number is, accounting for
@@ -251,6 +260,7 @@ void MAVLinkProtocol::receiveBytes(LinkInterface* link, QByteArray b)
                 } else {
                     lostMessages = _message.seq - expectedSeq;
                 }
+                qDebug() << "\n _message.seq = " << _message.seq << " expectedSeq = " << expectedSeq;
                 qDebug() << "\n lost messages = " << lostMessages << " _message.sysid = " << _message.sysid << " _message.compid = " << _message.compid << " _message.msgid = " << _message.msgid;
 
                 // Log how many were lost
@@ -266,7 +276,7 @@ void MAVLinkProtocol::receiveBytes(LinkInterface* link, QByteArray b)
             receiveLossPercent = (receiveLossPercent * 0.5f) + (runningLossPercent[mavlinkChannel] * 0.5f);
             runningLossPercent[mavlinkChannel] = receiveLossPercent;
 
-            //qDebug() << foo << _message.seq << expectedSeq << lastSeq << totalLossCounter[mavlinkChannel] << totalReceiveCounter[mavlinkChannel] << totalSentCounter[mavlinkChannel] << "(" << _message.sysid << _message.compid << ")";
+//            qDebug() << "foo" << _message.seq << expectedSeq << lastSeq << totalLossCounter[mavlinkChannel] << totalReceiveCounter[mavlinkChannel] << totalSentCounter[mavlinkChannel] << "(" << _message.sysid << _message.compid << ")";
 
             //-----------------------------------------------------------------
             // MAVLink forwarding

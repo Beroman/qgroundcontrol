@@ -22,22 +22,22 @@ LEDSection::LEDSection(PlanMasterController* masterController, QObject* parent)
     , _available      (false)
     , _dirty          (false)
     , _specifyColor   (false)
-    , _colorFact      (0, _colorName,   FactMetaData::valueTypeDouble)
+    , _colorFact      (0, _colorName,   FactMetaData::valueTypeUint32)
 {
     if (_metaDataMap.isEmpty()) {
         _metaDataMap = FactMetaData::createMapFromJsonFile(QStringLiteral(":/json/LEDSection.FactMetaData.json"), nullptr /* metaDataParent */);
     }
 
-    double flightSpeed = 0;
-    if (_masterController->controllerVehicle()->multiRotor()) {
-        flightSpeed = _masterController->controllerVehicle()->defaultHoverSpeed();
-    } else {
-        flightSpeed = _masterController->controllerVehicle()->defaultCruiseSpeed();
-    }
+    quint32 ledColor = 0;
+//    if (_masterController->controllerVehicle()->multiRotor()) {
+//        flightSpeed = _masterController->controllerVehicle()->defaultHoverSpeed();
+//    } else {
+//        flightSpeed = _masterController->controllerVehicle()->defaultCruiseSpeed();
+//    }
 
-    _metaDataMap[_colorName]->setRawDefaultValue(flightSpeed);
+    _metaDataMap[_colorName]->setRawDefaultValue(ledColor);
     _colorFact.setMetaData(_metaDataMap[_colorName]);
-    _colorFact.setRawValue(flightSpeed);
+    _colorFact.setRawValue(ledColor);
 
     connect(this,         &LEDSection::specifyColorChanged,   this, &LEDSection::settingsSpecifiedChanged);
     connect(&_colorFact,  &Fact::valueChanged,                this, &LEDSection::_colorChanged);
@@ -88,20 +88,20 @@ void LEDSection::appendSectionItems(QList<MissionItem*>& items, QObject* mission
 {
     // IMPORTANT NOTE: If anything changes here you must also change LEDSection::scanForSettings
 
-    if (_specifyColor) {
-        MissionItem* item = new MissionItem(seqNum++,
-                                            MAV_CMD_DO_CHANGE_SPEED,
-                                            MAV_FRAME_MISSION,
-                                            _masterController->controllerVehicle()->multiRotor() ? 1 /* groundspeed */ : 0 /* airspeed */,    // Change airspeed or groundspeed
-                                            _colorFact.rawValue().toDouble(),
-                                            -1,                                                                 // No throttle change
-                                            0,                                                                  // Absolute speed change
-                                            0, 0, 0,                                                            // param 5-7 not used
-                                            true,                                                               // autoContinue
-                                            false,                                                              // isCurrentItem
-                                            missionItemParent);
-        items.append(item);
-    }
+//    if (_specifyColor) {
+//        MissionItem* item = new MissionItem(seqNum++,
+//                                            MAV_CMD_DO_CHANGE_SPEED,
+//                                            MAV_FRAME_MISSION,
+//                                            _masterController->controllerVehicle()->multiRotor() ? 1 /* groundspeed */ : 0 /* airspeed */,    // Change airspeed or groundspeed
+//                                            _colorFact.rawValue().toDouble(),
+//                                            -1,                                                                 // No throttle change
+//                                            0,                                                                  // Absolute speed change
+//                                            0, 0, 0,                                                            // param 5-7 not used
+//                                            true,                                                               // autoContinue
+//                                            false,                                                              // isCurrentItem
+//                                            missionItemParent);
+//        items.append(item);
+//    }
 }
 
 bool LEDSection::scanForSection(QmlObjectListModel* visualItems, int scanIndex)
@@ -116,20 +116,21 @@ bool LEDSection::scanForSection(QmlObjectListModel* visualItems, int scanIndex)
         return false;
     }
     MissionItem& missionItem = item->missionItem();
+    Q_UNUSED(missionItem)
 
     // See LEDSection::appendMissionItems for specs on what consitutes a known speed setting
 
-    if (missionItem.command() == MAV_CMD_DO_CHANGE_SPEED && missionItem.param3() == -1 && missionItem.param4() == 0 && missionItem.param5() == 0 && missionItem.param6() == 0 && missionItem.param7() == 0) {
-        if (_masterController->controllerVehicle()->multiRotor() && missionItem.param1() != 1) {
-            return false;
-        } else if (_masterController->controllerVehicle()->fixedWing() && missionItem.param1() != 0) {
-            return false;
-        }
-        visualItems->removeAt(scanIndex)->deleteLater();
-        _colorFact.setRawValue(missionItem.param2());
-        setSpecifyColor(true);
-        return true;
-    }
+//    if (missionItem.command() == MAV_CMD_DO_CHANGE_SPEED && missionItem.param3() == -1 && missionItem.param4() == 0 && missionItem.param5() == 0 && missionItem.param6() == 0 && missionItem.param7() == 0) {
+//        if (_masterController->controllerVehicle()->multiRotor() && missionItem.param1() != 1) {
+//            return false;
+//        } else if (_masterController->controllerVehicle()->fixedWing() && missionItem.param1() != 0) {
+//            return false;
+//        }
+//        visualItems->removeAt(scanIndex)->deleteLater();
+//        _colorFact.setRawValue(missionItem.param2());
+//        setSpecifyColor(true);
+//        return true;
+//    }
 
     return false;
 }
